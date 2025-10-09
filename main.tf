@@ -5,3 +5,4 @@ data "aws_availability_zones" "available" {
 locals {
   selected_azs = slice(data.aws_availability_zones.available.names, 0, 3)
 }
+
