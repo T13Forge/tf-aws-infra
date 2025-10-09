@@ -7,7 +7,7 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
 
 ## 📘 Overview
 
-Infrastructure Includes
+### Infrastructure Includes
 
 - VPC (aws_vpc.csye6225)
 - 3 Public subnets and 3 Private subnets, each in a different AZ
@@ -16,41 +16,33 @@ Infrastructure Includes
 - Private Route Table (internal routing only)
 - Modular Terraform structure (separate .tf files for each resource type)
 
-Key Features
+### Key Features
+
 - Modular, readable configuration
 - Supports multiple environments (dev, demo) via separate .tfvars files
 - No hardcoded values — variables and inputs are fully parameterized
 
 ---
 
-## 🗂️ Project Structure
-
-.
-├── main.tf
-├── providers.tf
-├── versions.tf
-├── variables.tf
-├── dev.tfvars              # dev environment variables
-├── demo.tfvars             # demo environment variables
-├── vpc.tf
-├── subnets.tf
-├── igw.tf
-├── route_tables.tf
-└── outputs.tf
-
----
-
-⚙️ Prerequisites
+## ⚙️ Prerequisites
 
 - Terraform >= 1.6.0
 - AWS CLI installed and configured
 
-```shell
-  aws configure --profile dev
-  aws configure --profile demo
-```
+  ```shell
+    aws configure --profile dev
+    aws configure --profile demo
+  ```
 
 - IAM user or profile with permissions to create VPC, subnets, route tables, and IGWs
+- Create environment-specific variable files (dev.tfvars or demo.tfvars) with the following structure:
+
+  ```hcl
+    region   = "us-east-1"
+    profile  = "dev"
+    vpc_name = "dev"
+    vpc_cidr = "10.0.0.0/16"
+  ```
 
 ---
 
@@ -78,7 +70,7 @@ terraform init
   terraform apply -var-file="demo.tfvars"
   ```
 
-### ⚠️ Important Notes:
+### ⚠️ Important Notes
 
 - Each .tfvars represents a separate environment configuration.
 - Terraform treats all resources defined in this directory as a single state.
@@ -104,12 +96,12 @@ You can also view them via: `terraform output`
 
 - Each .tfvars defines values like:
 
-```hcl
-  region   = "us-east-1"
-  profile  = "dev"
-  vpc_name = "dev"
-  vpc_cidr = "10.0.0.0/16"
-```
+  ```hcl
+    region   = "us-east-1"
+    profile  = "dev"
+    vpc_name = "dev"
+    vpc_cidr = "10.0.0.0/16"
+  ```
 
 - Do not use multiple tfvars with the same workspace — Terraform will treat it as an update, not a new VPC.
 - For multiple coexisting VPCs in the same AWS account/region, consider switching to Terraform Workspaces (see next version).
