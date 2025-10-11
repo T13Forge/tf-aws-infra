@@ -1,3 +1,7 @@
+output "current_workspace" {
+  value = terraform.workspace
+}
+
 output "vpc_id" {
   value = aws_vpc.csye6225.id
 }
