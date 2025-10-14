@@ -6,3 +6,6 @@ resource "aws_internet_gateway" "csye6225" {
     Name = "igw-csye6225-${var.vpc_name}"
   })
 }
+
+
+
