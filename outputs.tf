@@ -24,3 +24,19 @@ output "route_tables" {
     private = aws_route_table.private.id
   }
 }
+
+output "chosen_subnet_id" {
+  value = local.chosen_subnet_id
+}
+
+output "chosen_az" {
+  value = local.chosen_az
+}
+
+output "application_sg_id" {
+  value = aws_security_group.app_sg.id
+}
+
+output "instance_id" {
+  value = aws_instance.app.public_ip
+}
