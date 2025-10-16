@@ -11,7 +11,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = merge(var.tags, {
-    Name = "subnet-public-${var.vpc_name}-${each.key}",
+    Name = "subnet-public-${var.vpc_name}-${terraform.workspace}-${each.key}",
     Tier = "public"
   })
 }
@@ -28,7 +28,7 @@ resource "aws_subnet" "private" {
   availability_zone = each.key
 
   tags = merge(var.tags, {
-    Name = "subnet-private-${var.vpc_name}-${each.key}",
+    Name = "subnet-private-${var.vpc_name}-${terraform.workspace}-${each.key}",
     Tier = "private"
   })
 }

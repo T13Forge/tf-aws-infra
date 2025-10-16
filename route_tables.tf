@@ -3,7 +3,7 @@ resource "aws_route_table" "public" {
   vpc_id = aws_vpc.csye6225.id
 
   tags = merge(var.tags, {
-    Name = "rt-public-${var.vpc_name}"
+    Name = "rt-public-${var.vpc_name}-${terraform.workspace}"
   })
 }
 
@@ -12,7 +12,7 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.csye6225.id
 
   tags = merge(var.tags, {
-    Name = "rt-private-${var.vpc_name}"
+    Name = "rt-private-${var.vpc_name}-${terraform.workspace}"
   })
 }
 
