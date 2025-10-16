@@ -39,11 +39,53 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
 - Create environment-specific variable files (dev.tfvars or demo.tfvars) with the following structure:
 
   ```hcl
-    region   = "us-east-1"
-    profile  = "dev"
-    vpc_name = "dev"
-    vpc_cidr = "10.0.0.0/16"
+    region          = "us-east-1"
+    profile         = ""
+    vpc_name        = ""
+    vpc_cidr        = "10.0.0.0/16"
+    app_port        = 8081
+    public_key_path = "~/.ssh/aws_key.pub"
+    name_prefix     = "app-sg-dev"
+    ami_id          = ""
+    subnet_tier     = "public"
+    target_az       = "us-east-1a"
+
+    tags = {
+      Project = ""
+      Owner   = ""
+      Env     = ""
+    }
   ```
+
+---
+
+## EC2 Instance
+
+This Terraform setup also provisions an EC2 instance inside the created VPC.
+
+EC2 Configuration Overview
+
+- AMI: Ubuntu 20.04 LTS (or your custom AMI)
+- Instance Type: t3.micro
+- Root Volume: 25 GB GP2 (auto deleted on termination)
+- SSH Key Pair: Generated from your local public key (aws_key_pair)
+- Subnet Placement: Dynamically selected by tier (public/private) and Availability Zone
+- Security Group:
+  - Ingress: TCP 22 (SSH), 80 (HTTP), 443 (HTTPS), and 8081 (your web app port)
+  - Egress: All outbound traffic allowed
+
+### How It Works
+
+- The public key defined in public_key_path will be uploaded to AWS as an EC2 Key Pair.
+You can later connect using:
+
+  ```shell
+  ssh -i ~/.ssh/aws_key.pem ubuntu@<EC2-Public-IP>
+  ```
+
+- The EC2 instance will be launched in the public subnet of the selected Availability Zone.
+If you set subnet_tier = "private", it will launch in the private subnet instead (without public IP).
+- The app_port (e.g. 8081) defines the custom application port opened in the security group.
 
 ---
 
@@ -68,7 +110,7 @@ terraform workspace list
 
 You’ll see something like:
 
-```
+```txt
   default
 * dev
   demo
@@ -124,6 +166,10 @@ After deployment, Terraform prints key identifiers:
 - private_subnets
 - igw_id
 - route_tables
+- chosen_subnet_id
+- chosen_az
+- application_sg_id
+- instance_id
 
 You can also view them via: `terraform output`
 
