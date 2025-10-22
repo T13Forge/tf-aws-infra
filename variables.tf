@@ -74,6 +74,55 @@ variable "name_prefix" {
   default     = "app"
 }
 
+variable "db_port" {
+  description = "Database port number"
+  type        = number
+  default     = 5432
+}
+
+variable "db_name" {
+  description = "Initial database name to create inside RDS"
+  type        = string
+  default     = "csye6225_db"
+}
+
+variable "db_username" {
+  description = "Master DB username"
+  type        = string
+  default     = "6225_user"
+}
+
+variable "db_password" {
+  description = "Master password for RDS"
+  type        = string
+  sensitive   = true
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.micro" # or "db.t4g.micro" (ARM/Graviton)
+}
+
+variable "db_allocated_storage" {
+  description = "Allocated storage in GB"
+  type        = number
+  default     = 20
+}
+
+# Control PG version & family
+variable "db_engine_version" {
+  description = "PostgreSQL engine version"
+  type        = string
+  default     = "16.3"
+}
+
+variable "db_engine_family" {
+  description = "Parameter group family for PostgreSQL"
+  type        = string
+  default     = "postgres16"
+}
+
 variable "tags" {
   description = "Common tags applied to all resources"
   type        = map(string)

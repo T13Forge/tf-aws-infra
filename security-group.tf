@@ -1,9 +1,12 @@
+#----------------------
+# Web App Security Group
+#----------------------
 resource "aws_security_group" "app_sg" {
-  name        = "${var.name_prefix}-sg"
+  name        = "${var.name_prefix}-app-sg"
   description = "Web App SG: 22,80,443,app open to world"
   vpc_id      = aws_vpc.csye6225.id
 
-  tags = { Name = "${var.name_prefix}-sg" }
+  tags = { Name = "${var.name_prefix}-app-sg" }
 }
 
 locals {
@@ -40,5 +43,33 @@ resource "aws_vpc_security_group_egress_rule" "all_out_ipv6" {
   count             = var.enable_ipv6 ? 1 : 0
   security_group_id = aws_security_group.app_sg.id
   cidr_ipv6         = "::/0"
+  ip_protocol       = "-1"
+}
+
+#----------------------
+# DB Security Group
+#----------------------
+resource "aws_security_group" "db_sg" {
+  name        = "${var.name_prefix}-db-sg"
+  description = "Database Security Group: only allow access from EC2 app_sg"
+  vpc_id      = aws_vpc.csye6225.id
+
+  tags = { Name = "${var.name_prefix}-db-sg" }
+}
+
+# Allow inbound DB access from app_sg
+resource "aws_vpc_security_group_ingress_rule" "db_ingress_app_sg" {
+  security_group_id = aws_security_group.db_sg.id # apply to what sg
+  referenced_security_group_id = aws_security_group.app_sg.id
+  from_port         = var.db_port
+  to_port           = var.db_port
+  ip_protocol       = "tcp"
+  description       = "Allow TCP ${each.value} from anywhere (IPv4)"
+}
+
+# Allow outbound (for updates / AWS services)
+resource "aws_vpc_security_group_egress_rule" "db_all_out_ipv4" {
+  security_group_id = aws_security_group.db_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }

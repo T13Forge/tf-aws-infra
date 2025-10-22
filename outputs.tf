@@ -40,3 +40,12 @@ output "application_sg_id" {
 output "instance_id" {
   value = aws_instance.app.public_ip
 }
+
+output "rds_endpoint" {
+  description = "RDS endpoint hostname"
+  value = aws_db_instance.db.address
+}
+
+output "rds_port" {
+  value = aws_db_instance.db.port
+}
