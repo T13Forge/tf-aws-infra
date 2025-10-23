@@ -23,6 +23,7 @@ resource "aws_instance" "app" {
   instance_type          = var.instance_type
   subnet_id              = local.chosen_subnet_id
   vpc_security_group_ids = [aws_security_group.app_sg.id]
+  iam_instance_profile = aws_iam_instance_profile.app_ec2_profile.name
 
   # assign ssh key
   key_name = var.key_name != "" ? var.key_name : null

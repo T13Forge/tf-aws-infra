@@ -143,6 +143,12 @@ variable "service_name" {
   default = "csye6225_webapp" 
 }
 
+variable "s3_prefix" {
+  description = "Restrict access to a specific folder (prefix) inside the bucket. Leave empty (\"\") to allow access to the entire bucket."
+  type = string
+  default = "" 
+}
+
 variable "tags" {
   description = "Common tags applied to all resources"
   type        = map(string)
