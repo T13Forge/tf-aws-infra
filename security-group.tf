@@ -59,12 +59,12 @@ resource "aws_security_group" "db_sg" {
 
 # Allow inbound DB access from app_sg
 resource "aws_vpc_security_group_ingress_rule" "db_ingress_app_sg" {
-  security_group_id = aws_security_group.db_sg.id # apply to what sg
+  security_group_id            = aws_security_group.db_sg.id # apply to what sg
   referenced_security_group_id = aws_security_group.app_sg.id
-  from_port         = var.db_port
-  to_port           = var.db_port
-  ip_protocol       = "tcp"
-  description       = "Allow TCP ${each.value} from anywhere (IPv4)"
+  from_port                    = var.db_port
+  to_port                      = var.db_port
+  ip_protocol                  = "tcp"
+  description                  = "Allow TCP ${each.value} from anywhere (IPv4)"
 }
 
 # Allow outbound (for updates / AWS services)

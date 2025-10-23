@@ -123,30 +123,30 @@ variable "db_engine_family" {
   default     = "postgres16"
 }
 
-variable "app_user"   {
-  type = string
-  default = "csyeapp" 
+variable "app_user" {
+  type    = string
+  default = "csyeapp"
 }
 
-variable "app_group"  {
-  type = string
-  default = "csye6225" 
+variable "app_group" {
+  type    = string
+  default = "csye6225"
 }
 
-variable "app_dir"    {
-  type = string
-  default = "/opt/csye6225" 
+variable "app_dir" {
+  type    = string
+  default = "/opt/csye6225"
 }
 
 variable "service_name" {
-  type = string
-  default = "csye6225_webapp" 
+  type    = string
+  default = "csye6225_webapp"
 }
 
 variable "s3_prefix" {
   description = "Restrict access to a specific folder (prefix) inside the bucket. Leave empty (\"\") to allow access to the entire bucket."
-  type = string
-  default = "" 
+  type        = string
+  default     = ""
 }
 
 variable "tags" {

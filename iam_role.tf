@@ -5,9 +5,9 @@ resource "aws_iam_role" "app_ec2_role" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect = "Allow",
+      Effect    = "Allow",
       Principal = { Service = "ec2.amazonaws.com" }, # Who can assume this role. The 'Service' here represents the EC2 service itself.
-      Action = "sts:AssumeRole"
+      Action    = "sts:AssumeRole"
     }]
   })
 }
@@ -24,11 +24,11 @@ resource "aws_iam_instance_profile" "app_ec2_profile" {
 # ----------------------
 locals {
   # Retrieve the name and ARN of the S3 bucket created in Terraform.
-  bucket_name  = aws_s3_bucket.images.bucket
-  bucket_arn   = "arn:aws:s3:::${local.bucket_name}"
+  bucket_name = aws_s3_bucket.images.bucket
+  bucket_arn  = "arn:aws:s3:::${local.bucket_name}"
 
   # Define the object-level ARN (optionally scoped to a prefix).
-  objects_arn  = "arn:aws:s3:::${local.bucket_name}/${var.s3_prefix}*"
+  objects_arn = "arn:aws:s3:::${local.bucket_name}/${var.s3_prefix}*"
 }
 
 # Generate a least-privilege S3 access policy for the EC2 IAM Role.
@@ -59,9 +59,9 @@ data "aws_iam_policy_document" "s3_app_least" {
 
   # 3) Optional: Allow multipart upload operations for large files.
   statement {
-    sid       = "Multipart"
-    effect    = "Allow"
-    actions   = [
+    sid    = "Multipart"
+    effect = "Allow"
+    actions = [
       "s3:AbortMultipartUpload",
       "s3:ListMultipartUploadParts",
       "s3:ListBucketMultipartUploads"

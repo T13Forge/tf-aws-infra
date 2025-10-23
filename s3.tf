@@ -4,8 +4,8 @@ resource "aws_s3_bucket" "images" {
   bucket_prefix = var.name_prefix
 
   tags = {
-    Name = "${var.name_prefix}-s3"
-    Environment  = var.profile
+    Name        = "${var.name_prefix}-s3"
+    Environment = var.profile
   }
 }
 

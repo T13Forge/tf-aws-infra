@@ -43,7 +43,7 @@ output "instance_id" {
 
 output "rds_endpoint" {
   description = "RDS endpoint hostname"
-  value = aws_db_instance.db.address
+  value       = aws_db_instance.db.address
 }
 
 output "rds_port" {
