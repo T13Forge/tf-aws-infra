@@ -123,6 +123,26 @@ variable "db_engine_family" {
   default     = "postgres16"
 }
 
+variable "app_user"   {
+  type = string
+  default = "csyeapp" 
+}
+
+variable "app_group"  {
+  type = string
+  default = "csye6225" 
+}
+
+variable "app_dir"    {
+  type = string
+  default = "/opt/csye6225" 
+}
+
+variable "service_name" {
+  type = string
+  default = "csye6225_webapp" 
+}
+
 variable "tags" {
   description = "Common tags applied to all resources"
   type        = map(string)
