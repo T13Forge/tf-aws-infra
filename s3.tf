@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "images" {
-  bucket        = random_uuid()
+  bucket        = "${var.name_prefix}-${random_uuid.s3_suffix.result}"
   force_destroy = true
   bucket_prefix = var.name_prefix
 
@@ -8,6 +8,8 @@ resource "aws_s3_bucket" "images" {
     Environment = var.profile
   }
 }
+
+resource "random_uuid" "s3_suffix" {}
 
 resource "aws_s3_bucket_public_access_block" "images" {
   bucket = aws_s3_bucket.images.id
