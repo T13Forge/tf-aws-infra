@@ -1,11 +1,9 @@
 resource "aws_s3_bucket" "images" {
   bucket        = "${var.name_prefix}-${random_uuid.s3_suffix.result}"
   force_destroy = true
-  bucket_prefix = var.name_prefix
 
   tags = {
-    Name        = "${var.name_prefix}-s3"
-    Environment = var.profile
+    Name = "${var.name_prefix}-s3"
   }
 }
 

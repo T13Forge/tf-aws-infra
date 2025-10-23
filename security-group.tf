@@ -64,7 +64,7 @@ resource "aws_vpc_security_group_ingress_rule" "db_ingress_app_sg" {
   from_port                    = var.db_port
   to_port                      = var.db_port
   ip_protocol                  = "tcp"
-  description                  = "Allow TCP ${each.value} from anywhere (IPv4)"
+  description                  = "Allow TCP ${var.db_port} from anywhere (IPv4)"
 }
 
 # Allow outbound (for updates / AWS services)

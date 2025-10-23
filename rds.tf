@@ -41,8 +41,7 @@ resource "aws_db_instance" "db" {
   skip_final_snapshot = true
 
   tags = {
-    Name        = "${var.name_prefix}-rds-postgres"
-    Environment = var.profile
+    Name = "${var.name_prefix}-rds-postgres"
   }
 
   depends_on = [

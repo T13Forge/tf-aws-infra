@@ -3,14 +3,15 @@ variable "region" {
   type        = string
 }
 
-variable "profile" {
-  description = "AWS CLI profile to use (e.g., dev, demo)"
-  type        = string
-}
+# variable "profile" {
+#   description = "AWS CLI profile to use (e.g., dev, demo)"
+#   type        = string
+# }
 
 variable "vpc_name" {
   description = "Name for the VPC (e.g., dev, demo)"
   type        = string
+  default     = ""
 }
 
 variable "vpc_cidr" {
@@ -42,7 +43,7 @@ variable "subnet_tier" {
 variable "target_az" {
   description = "AZ for the EC2 (e.g., us-east-1a). If null, pick the first AZ you created."
   type        = string
-  default     = null
+  default     = "us-east-1a"
 }
 
 variable "key_name" {
@@ -71,7 +72,7 @@ variable "public_key_path" {
 variable "name_prefix" {
   description = "Name prefix for resources"
   type        = string
-  default     = "app"
+  default     = "csye6225"
 }
 
 variable "db_port" {
@@ -89,7 +90,7 @@ variable "db_name" {
 variable "db_username" {
   description = "Master DB username"
   type        = string
-  default     = "6225_user"
+  default     = "csye6225_user"
 }
 
 variable "db_password" {
