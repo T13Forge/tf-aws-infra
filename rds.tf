@@ -17,6 +17,24 @@ resource "aws_db_subnet_group" "db_private" {
   }
 }
 
+# Generate a secure random pwd for RDS
+resource "random_password" "rds" {
+  length           = 16
+  special          = true
+  override_special = "!#$%&'()*+,-.:;<=>?[]^_{|}~"
+}
+
+# Store the generated pwd in AWS Secrets Manager
+resource "aws_secretsmanager_secret" "rds" {
+  name        = "${var.name_prefix}-rds-master-password"
+  description = "Master password for the ${var.name_prefix} RDS instance"
+}
+
+resource "aws_secretsmanager_secret_version" "rds" {
+  secret_id     = aws_secretsmanager_secret.rds.id
+  secret_string = random_password.rds.result
+}
+
 # RDS Instance
 resource "aws_db_instance" "db" {
   identifier        = "${var.name_prefix}-rds"
@@ -28,7 +46,7 @@ resource "aws_db_instance" "db" {
 
   db_name  = var.db_name
   username = var.db_username
-  password = var.db_password
+  password = random_password.rds.result # <-- use generated pwd
 
   port                = var.db_port # 5432
   multi_az            = false

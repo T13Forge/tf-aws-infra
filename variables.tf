@@ -93,11 +93,11 @@ variable "db_username" {
   default     = "csye6225_user"
 }
 
-variable "db_password" {
-  description = "Master password for RDS"
-  type        = string
-  sensitive   = true
-}
+# variable "db_password" {
+#   description = "Master password for RDS"
+#   type        = string
+#   sensitive   = true
+# }
 
 variable "db_instance_class" {
   description = "RDS instance class"
