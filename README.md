@@ -15,6 +15,9 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
 - Public Route Table (0.0.0.0/0 → IGW)
 - Private Route Table (internal routing only)
 - Modular Terraform structure (separate .tf files for each resource type)
+- RDS PostgreSQL instance in private subnets (with DB subnet group & SG)
+- IAM Role and Instance Profile for EC2 to access S3
+- S3 bucket for product image storage
 
 ### Key Features
 
@@ -40,7 +43,6 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
 
   ```hcl
     region          = "us-east-1"
-    profile         = ""
     vpc_name        = ""
     vpc_cidr        = "10.0.0.0/16"
     app_port        = 8081
@@ -50,10 +52,14 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
     subnet_tier     = "public"
     target_az       = "us-east-1a"
 
+    # DB
+    db_name              = "csye6225"
+    db_username          = "dbadmin"
+    db_port              = 5432
+
     tags = {
       Project = ""
       Owner   = ""
-      Env     = ""
     }
   ```
 
@@ -86,6 +92,46 @@ You can later connect using:
 - The EC2 instance will be launched in the public subnet of the selected Availability Zone.
 If you set subnet_tier = "private", it will launch in the private subnet instead (without public IP).
 - The app_port (e.g. 8081) defines the custom application port opened in the security group.
+
+### EC2 ↔️ RDS Integration
+
+- The EC2 instance connects to RDS on startup via user_data.sh, which injects RDS environment variables into the application’s .env file:
+- The EC2 instance must be launched in a public subnet, while RDS remains in private subnets.
+- The EC2 security group is whitelisted in the RDS SG to allow inbound PostgreSQL traffic (port 5432).
+
+### EC2 IAM Role & Instance Profile
+
+- EC2 assumes an IAM Role with S3 access permissions (policy described in the S3 section).
+- The IAM role is attached to the instance via Instance Profile.
+- This allows the web app to securely upload and delete images on S3 without hardcoding AWS credentials.
+
+## 🐘 RDS (PostgreSQL)
+
+This Terraform configuration now provisions an Amazon RDS PostgreSQL instance in the private subnet for secure backend storage.
+
+RDS Configuration Overview
+
+- Engine: PostgreSQL 16.x
+- Storage: GP3 (20GB)
+- Public Access: Disabled
+- Multi-AZ: Disabled (for dev/demo environments)
+- Security Group: Allows inbound traffic only from EC2’s security group on port 5432
+- Database credentials (username, DB name, port) are read from your *.tfvars files
+
+## S3 Bucket
+
+An S3 bucket is created to store product images uploaded through the web application.
+
+Configuration Overview
+
+- Bucket name is prefixed with your environment (e.g., dev-csye6225-webapp-bucket)
+- Versioning: Enabled
+- Block Public Access: Enabled
+- IAM policy allows EC2 instances (via instance profile) to:
+  - Upload (PutObject)
+  - Read (GetObject)
+  - Delete (DeleteObject)
+  - List (ListBucket)
 
 ---
 
@@ -138,7 +184,7 @@ The * indicates your current workspace
 
 Terraform will automatically create per-workspace state files under:
 
-```
+```txt
 terraform.tfstate.d/
 ├── dev/
 │   └── terraform.tfstate
@@ -162,14 +208,16 @@ After deployment, Terraform prints key identifiers:
 
 - current_workspace
 - vpc_id
-- public_subnets
-- private_subnets
+- public_subnets = []
+- private_subnets = []
 - igw_id
 - route_tables
 - chosen_subnet_id
 - chosen_az
 - application_sg_id
 - instance_id
+- rds_endpoint
+- rds_port
 
 You can also view them via: `terraform output`
 
