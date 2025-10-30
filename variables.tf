@@ -150,6 +150,29 @@ variable "s3_prefix" {
   default     = ""
 }
 
+variable "route53_zone_name" {
+  description = "Public hosted zone name for this environment (e.g., dev.domain.tld or demo.domain.tld)"
+  type        = string
+}
+
+variable "app_public_ip" {
+  description = "Fallback IP if no in-plan EC2 resource is referenced"
+  type        = string
+  default     = ""
+}
+
+variable "record_name" {
+  description = "Record name inside the zone; empty string for apex"
+  type        = string
+  default     = ""
+}
+
+variable "record_ttl" {
+  description = "TTL for A records"
+  type        = number
+  default     = 300
+}
+
 variable "tags" {
   description = "Common tags applied to all resources"
   type        = map(string)
