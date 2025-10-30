@@ -32,3 +32,36 @@ systemctl enable "${service_name}.service"
 systemctl restart "${service_name}.service"
 
 info "=== Web App started successfully ==="
+
+# ---------------------------------------------------------------------------
+# CloudWatch Agent: Refresh and start using baked config (from Packer)
+# ---------------------------------------------------------------------------
+CWA_BIN="/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl"
+CWA_CFG="/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json"
+
+info "=== Preparing CloudWatch Agent ==="
+
+# Ensure application log directory exists (for ${app_dir}/log/app.log)
+install -d -m 0755 -o "${app_user}" -g "${app_group}" "${app_dir}/log" || true
+
+if [ -x "$CWA_BIN" ] && [ -f "$CWA_CFG" ]; then
+  info "CloudWatch Agent binary and config found. Enabling and refreshing..."
+  
+  # Enable on boot (idempotent)
+  systemctl enable amazon-cloudwatch-agent || true
+
+  # Stop agent if running (safe if it's not)
+  "$CWA_BIN" -a stop || true
+
+  # Fetch baked config and start
+  "$CWA_BIN" -a fetch-config -m ec2 -c file:"$CWA_CFG" -s
+
+  # Check service status (non-fatal)
+  systemctl status amazon-cloudwatch-agent --no-pager || true
+
+  info "CloudWatch Agent started with baked config."
+else
+  err "CloudWatch Agent binary or config not found. Skipping agent start."
+fi
+
+info "=== User data script completed successfully ==="

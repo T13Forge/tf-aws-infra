@@ -82,3 +82,21 @@ resource "aws_iam_role_policy_attachment" "s3_access" {
   role       = aws_iam_role.app_ec2_role.name
   policy_arn = aws_iam_policy.s3_app_policy.arn
 }
+
+# -----------
+# CloudWatch
+# -----------
+
+# Grants CloudWatch Agent permissions to create log groups/streams and put log events,
+# and to send custom metrics (PutMetricData).
+resource "aws_iam_role_policy_attachment" "cloudwatch_agent" {
+  role       = aws_iam_role.app_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+# Enables SSM connectivity (optional but highly recommended to manage the instance/agent
+# without SSH and to fetch agent binaries or run commands).
+resource "aws_iam_role_policy_attachment" "ssm_core" {
+  role       = aws_iam_role.app_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
