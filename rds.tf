@@ -26,8 +26,9 @@ resource "random_password" "rds" {
 
 # Store the generated pwd in AWS Secrets Manager
 resource "aws_secretsmanager_secret" "rds" {
-  name        = "${var.name_prefix}-rds-master-password"
-  description = "Master password for the ${var.name_prefix} RDS instance"
+  name                    = "${var.name_prefix}-rds-master-strong-password"
+  description             = "Master password for the ${var.name_prefix} RDS instance"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "rds" {
