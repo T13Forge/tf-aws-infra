@@ -1,0 +1,119 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "ec2:*",
+            "Effect": "Allow",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "elasticloadbalancing:*",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "cloudwatch:*",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "autoscaling:*",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "iam:CreateServiceLinkedRole",
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "iam:AWSServiceName": [
+                        "autoscaling.amazonaws.com",
+                        "ec2scheduled.amazonaws.com",
+                        "elasticloadbalancing.amazonaws.com",
+                        "spot.amazonaws.com",
+                        "spotfleet.amazonaws.com",
+                        "transitgateway.amazonaws.com"
+                    ]
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:*",
+                "s3-object-lambda:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "EC2InstanceConnect",
+            "Action": [
+                "ec2:DescribeInstances",
+                "ec2-instance-connect:SendSSHPublicKey"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        },
+        {
+            "Sid": "BasePermissions",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:*",
+                "cloudformation:CreateChangeSet",
+                "cloudformation:DescribeChangeSet",
+                "cloudformation:DescribeStackResource",
+                "cloudformation:DescribeStacks",
+                "cloudformation:ExecuteChangeSet",
+                "docdb-elastic:GetCluster",
+                "docdb-elastic:ListClusters",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeVpcs",
+                "kms:DescribeKey",
+                "kms:ListAliases",
+                "kms:ListKeys",
+                "lambda:ListFunctions",
+                "rds:DescribeDBClusters",
+                "rds:DescribeDBInstances",
+                "redshift:DescribeClusters",
+                "redshift-serverless:ListWorkgroups",
+                "redshift-serverless:GetNamespace",
+                "tag:GetResources"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "LambdaPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:AddPermission",
+                "lambda:CreateFunction",
+                "lambda:GetFunction",
+                "lambda:InvokeFunction",
+                "lambda:UpdateFunctionConfiguration"
+            ],
+            "Resource": "arn:aws:lambda:*:*:function:SecretsManager*"
+        },
+        {
+            "Sid": "SARPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "serverlessrepo:CreateCloudFormationChangeSet",
+                "serverlessrepo:GetApplication"
+            ],
+            "Resource": "arn:aws:serverlessrepo:*:*:applications/SecretsManager*"
+        },
+        {
+            "Sid": "S3Permissions",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::awsserverlessrepo-changesets*",
+                "arn:aws:s3:::secrets-manager-rotation-apps-*/*"
+            ]
+        }
+    ]
+}
