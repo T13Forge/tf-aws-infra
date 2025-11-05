@@ -173,6 +173,18 @@ variable "record_ttl" {
   default     = 300
 }
 
+variable "enable_ssh" {
+  description = "Enable SSH (port 22) access for admin management"
+  type        = bool
+  default     = true
+}
+
+variable "my_ip_cidr" {
+  description = "Public IPv4 CIDR allowed to SSH into EC2 (e.g., 35.27.81.142/32)"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
 variable "tags" {
   description = "Common tags applied to all resources"
   type        = map(string)
