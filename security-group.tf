@@ -2,8 +2,8 @@
 # Load Balancer SG
 #--------------------
 resource "aws_security_group" "lb_sg" {
-  name        = "${var.name_prefix}-lb-sg"
-  vpc_id      = aws_vpc.csye6225.id
+  name   = "${var.name_prefix}-lb-sg"
+  vpc_id = aws_vpc.csye6225.id
 }
 
 locals {
@@ -27,11 +27,11 @@ resource "aws_vpc_security_group_egress_rule" "lb_all_out" {
 }
 
 #----------------------
-# Web App Security Group
+# Web App SG
 #----------------------
 resource "aws_security_group" "app_sg" {
-  name        = "${var.name_prefix}-app-sg"
-  vpc_id      = aws_vpc.csye6225.id
+  name   = "${var.name_prefix}-app-sg"
+  vpc_id = aws_vpc.csye6225.id
 
   tags = { Name = "${var.name_prefix}-app-sg" }
 }
@@ -40,10 +40,10 @@ resource "aws_security_group" "app_sg" {
 resource "aws_vpc_security_group_ingress_rule" "app_from_alb" {
   security_group_id            = aws_security_group.app_sg.id
   referenced_security_group_id = aws_security_group.lb_sg.id
-  from_port   = var.app_port
-  to_port     = var.app_port
-  ip_protocol = "tcp"
-  description = "Allow inbound traffic on app port from ALB Security Group"
+  from_port                    = var.app_port
+  to_port                      = var.app_port
+  ip_protocol                  = "tcp"
+  description                  = "Allow inbound traffic on app port from ALB Security Group"
 }
 
 # Allow SSH access from your local public IP (for admin access)
@@ -51,7 +51,7 @@ resource "aws_vpc_security_group_ingress_rule" "app_from_alb" {
 resource "aws_vpc_security_group_ingress_rule" "app_ssh_admin" {
   count             = var.enable_ssh ? 1 : 0
   security_group_id = aws_security_group.app_sg.id
-  cidr_ipv4         = var.my_ip_cidr   # e.g., "35.27.81.142/32"
+  cidr_ipv4         = var.my_ip_cidr # e.g., "35.27.81.142/32"
   from_port         = 22
   to_port           = 22
   ip_protocol       = "tcp"
