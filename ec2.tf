@@ -115,10 +115,14 @@ resource "aws_autoscaling_group" "app_asg" {
   name                      = "${var.name_prefix}-asg"
   min_size                  = 3
   max_size                  = 5
-  desired_capacity          = 1
+  desired_capacity          = 3
   vpc_zone_identifier       = values(local.az_to_public_subnet_id)
   health_check_type         = "ELB"
+
+  # Time (in seconds) to wait after a new instance launches
+  # before starting health checks — allows the app to fully start up.
   health_check_grace_period = 60
+
   default_cooldown          = 60
 
   launch_template {

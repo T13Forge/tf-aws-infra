@@ -11,11 +11,11 @@ locals {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "lb_ingress_ipv4" {
-  for_each          = toset(local.lb_ingress_ports)
+  for_each          = toset([for p in local.lb_ingress_ports : tostring(p)])
   security_group_id = aws_security_group.lb_sg.id
   cidr_ipv4         = "0.0.0.0/0"
-  from_port         = each.value
-  to_port           = each.value
+  from_port         = tonumber(each.value)
+  to_port           = tonumber(each.value)
   ip_protocol       = "tcp"
   description       = "Allow TCP ${each.value} from anywhere (IPv4)"
 }
@@ -51,7 +51,7 @@ resource "aws_vpc_security_group_ingress_rule" "app_from_alb" {
 resource "aws_vpc_security_group_ingress_rule" "app_ssh_admin" {
   count             = var.enable_ssh ? 1 : 0
   security_group_id = aws_security_group.app_sg.id
-  cidr_ipv4         = var.my_ip_cidr # e.g., "35.27.81.142/32"
+  cidr_ipv4         = var.my_ip_cidr # e.g., "35.27.81.142/32", /32 means only this ip wouldb be allowed
   from_port         = 22
   to_port           = 22
   ip_protocol       = "tcp"
