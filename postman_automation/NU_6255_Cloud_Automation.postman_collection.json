@@ -1,0 +1,686 @@
+{
+	"info": {
+		"_postman_id": "c6afb5fa-9373-47ac-a4fc-d028badb7a34",
+		"name": "NU 6255 Cloud Automation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14776510"
+	},
+	"item": [
+		{
+			"name": "Check health",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}/healthz",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"healthz"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 2xx\", function () {",
+							"  pm.expect(pm.response.code).to.be.within(200, 299);",
+							"});",
+							"",
+							"let json = {};",
+							"try {",
+							"  json = pm.response.json();",
+							"} catch (e) {",
+							"  console.error(\"Response is not JSON:\", e);",
+							"}",
+							"",
+							"const userId = json.id || json.userId;",
+							"if (userId) {",
+							"  pm.collectionVariables.set(\"userId\", String(userId));",
+							"  console.log(\"Saved userId:\", userId);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"first_name\": \"first\",\n  \"last_name\": \"wu\",\n  \"password\": \"{{authPwd}}\",\n  \"username\": \"{{authEmail}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}/v1/user",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User Info",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}/v1/user/{{userId}}",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update User Info",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const oldPwd = pm.collectionVariables.get('authPwd') || 'defaultPwd';",
+							"pm.collectionVariables.set('oldAuthPwd', oldPwd);",
+							"",
+							"const newPwd = `${oldPwd}_new${Math.floor(Math.random() * 1000)}`;",
+							"pm.variables.set('newPwd', newPwd);",
+							"",
+							"const firstNames = [\"Isaac\", \"Ethan\", \"Liam\", \"Noah\", \"Oliver\", \"Lucas\", \"Mason\", \"Elijah\", \"Logan\", \"Aiden\"];",
+							"const lastNames  = [\"Tai\", \"Smith\", \"Johnson\", \"Brown\", \"Lee\", \"Davis\", \"Garcia\", \"Wilson\", \"Anderson\", \"Martinez\"];",
+							"",
+							"const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];",
+							"const lastName  = lastNames[Math.floor(Math.random() * lastNames.length)];",
+							"",
+							"pm.variables.set('firstName', firstName);",
+							"pm.variables.set('lastName', lastName);",
+							"",
+							"console.log(\"Will update password (old → new):\", oldPwd, \"→\", newPwd);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Update password OK\", () => {",
+							"  pm.expect(pm.response.code).to.be.within(200, 299);",
+							"});",
+							"",
+							"// only update the pwd if success",
+							"const newPwd = pm.variables.get('newPwd');",
+							"if (newPwd) {",
+							"  pm.collectionVariables.set('authPwd', newPwd);",
+							"  pm.collectionVariables.unset('oldAuthPwd'); //",
+							"  console.log(\"old pwd: \", pm.collectionVariables.get('oldAuthPwd'));",
+							"  console.log(\"new pwd: \", pm.collectionVariables.get('authPwd'));",
+							"  console.log(\"Promoted new password for subsequent requests:\", newPwd);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"first_name\": \"{{firstName}}\",\n  \"last_name\": \"{{lastName}}\",\n  \"password\": \"{{authPwd}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}/v1/user/{{userId}}",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"{{userId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create new product",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const num = Date.now();",
+							"const sku = `SKU-${num}-${Math.floor(Math.random() * 10000)}`;",
+							"",
+							"// random quantity：1~100",
+							"const quantity = Math.floor(Math.random() * 100) + 1;",
+							"",
+							"// set the variable for this request（local scope）",
+							"pm.variables.set('num', num);",
+							"pm.variables.set('sku', sku);",
+							"pm.variables.set('quantity', quantity);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 2xx\", function () {",
+							"  pm.expect(pm.response.code).to.be.within(200, 299);",
+							"});",
+							"",
+							"let json = {};",
+							"try {",
+							"  json = pm.response.json();",
+							"} catch (e) {",
+							"  console.log(\"Response is not JSON\");",
+							"}",
+							"",
+							"const productId = json.id || json.productId || (json.data && json.data.id);",
+							"const productQuantity = json.quantity;",
+							"if (productId) {",
+							"  pm.collectionVariables.set('productId', String(productId));",
+							"  pm.collectionVariables.set('quantity', productQuantity);",
+							"  console.log(\"Saved productId:\", productId);",
+							"} else {",
+							"  console.warn(\"productId not found in response\");",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"product-{{num}}\",\n  \"description\": \"Product ...\",\n  \"sku\": \"{{sku}}\",\n  \"manufacturer\": \"string\",\n  \"quantity\": {{quantity}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}/v1/product",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"product"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put product",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const num = Date.now();",
+							"const sku = `SKU-${num}-${Math.floor(Math.random() * 10000)}`;",
+							"",
+							"// random quantity：1~100",
+							"const quantity = Math.floor(Math.random() * 100) + 1;",
+							"",
+							"// set the variable for this request（local scope）",
+							"pm.variables.set('num', num);",
+							"pm.variables.set('sku', sku);",
+							"pm.variables.set('quantity', quantity);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"product-{{num}}\",\n  \"description\": \"apple\",\n  \"sku\": \"{{sku}}\",\n  \"manufacturer\": \"string\",\n  \"quantity\": {{quantity}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}/v1/product/{{productId}}",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"product",
+						"{{productId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Patch product",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let qty = Number(pm.collectionVariables.get('quantity')) || 0;",
+							"qty = qty + 1;",
+							"pm.collectionVariables.set('quantity', qty);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"quantity\": {{quantity}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}/v1/product/{{productId}}",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"product",
+						"{{productId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "upload img",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 2xx\", function() {",
+							"    pm.expect(pm.response.code).to.be.within(200, 299);",
+							"})",
+							"",
+							"let json = {};",
+							"try {",
+							"    json = pm.response.json;",
+							"} catch (e) {",
+							"    console.error(\"Err: response is not JSON: \", e)",
+							"}",
+							"",
+							"const imageId = json.image_id;",
+							"const productId = json.product_id;",
+							"const fileName = json.file_name;",
+							"",
+							"if (imageId) {",
+							"  pm.collectionVariables.set(\"imageId\", String(imageId));",
+							"  console.log(\"Saved imageId:\", imageId);",
+							"}",
+							"if (productId) {",
+							"  pm.collectionVariables.set(\"productId\", String(productId));",
+							"}",
+							"if (fileName) {",
+							"  pm.collectionVariables.set(\"fileName\", fileName);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": [
+                "imgs/image.png"
+              ]
+						}
+					]
+				},
+				"url": {
+					"raw": "http://{{host}}/v1/product/{{productId}}/image",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"product",
+						"{{productId}}",
+						"image"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete img",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}/v1/product/{{productId}}/image/{{imageId}}",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"product",
+						"{{productId}}",
+						"image",
+						"{{imageId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Product",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}/v1/product/{{productId}}",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"product",
+						"{{productId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Product",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Product not found - correct status and message\", function () {",
+							"  pm.expect(pm.response.code).to.eql(404);",
+							"  ",
+							"  let json = {};",
+							"  try {",
+							"    json = pm.response.json();",
+							"  } catch (e) {",
+							"    console.error(\"Response is not JSON\");",
+							"  }",
+							"",
+							"  pm.expect(json.error.toLowerCase()).to.include(\"not_found\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}/v1/product/{{productId}}",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"v1",
+						"product",
+						"{{productId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Metrics",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}/actuator/metrics",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"actuator",
+						"metrics"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "{{authPwd}}",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "{{authEmail}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					"// --- Run cleanup only once per run: on the first request, first iteration ---",
+					"if (pm.info.iteration === 0 && pm.info.requestName === 'Check health') {",
+					"  // Remove previous run’s cached variables",
+					"  try {",
+					"    const all = pm.collectionVariables.toObject ? pm.collectionVariables.toObject() : {};",
+					"    Object.keys(all).forEach(k => {",
+					"      if (k.startsWith('creds_iter_')) pm.collectionVariables.unset(k);",
+					"    });",
+					"  } catch (e) {",
+					"    // Fallback if toObject() not supported",
+					"    for (let i = 0; i < 50; i++) pm.collectionVariables.unset(`creds_iter_${i}`);",
+					"  }",
+					"",
+					"  pm.collectionVariables.unset('authEmail');",
+					"  pm.collectionVariables.unset('authPwd');",
+					"",
+					"  console.log('🧹 Cleared previous collection variables for a fresh run.');",
+					"}",
+					"",
+					"// --- Get the current iteration index ---",
+					"const iter = pm.info.iteration || 0;",
+					"",
+					"// --- Create a cache key for this iteration's credentials ---",
+					"const credKey = `creds_iter_${iter}`;",
+					"",
+					"// --- Check if credentials for this iteration already exist ---",
+					"let creds = pm.collectionVariables.get(credKey);",
+					"",
+					"if (!creds) {",
+					"  if (iter > 0) {",
+					"    const prevKey = `creds_iter_${iter - 1}`;",
+					"    if (pm.collectionVariables.get(prevKey)) {",
+					"      pm.collectionVariables.unset(prevKey);",
+					"      console.log(`🧹 Removed previous iteration cache: ${prevKey}`);",
+					"    }",
+					"  }",
+					"",
+					"  // No credentials yet for this iteration → generate new ones",
+					"  const email = `user_${iter}_${pm.variables.replaceIn('{{$timestamp}}')}_${pm.variables.replaceIn('{{$guid}}')}@example.com`;",
+					"  const pwd   = `P@ss_${pm.variables.replaceIn('{{$randomInt}}')}_${pm.variables.replaceIn('{{$guid}}')}`;",
+					"",
+					"  // Save this iteration’s credentials as a collection-level variable",
+					"  pm.collectionVariables.set(credKey, JSON.stringify({ email, pwd }));",
+					"  creds = pm.collectionVariables.get(credKey);",
+					"",
+					"  console.log(`Generated credentials for iteration ${iter}:`, email, pwd);",
+					"}",
+					"",
+					"// --- Retrieve the cached credentials and expose them as global variables ---",
+					"const { email, pwd } = JSON.parse(creds);",
+					"pm.collectionVariables.set('authEmail', email);",
+					"pm.collectionVariables.set('authPwd',   pwd);",
+					"",
+					"// --- Set local variables so the current request can immediately use them ---",
+					"pm.variables.set('authEmail', email);",
+					"pm.variables.set('authPwd',   pwd);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "authEmail",
+			"value": ""
+		},
+		{
+			"key": "authPwd",
+			"value": ""
+		},
+		{
+			"key": "creds_iter_0",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "productId",
+			"value": ""
+		},
+		{
+			"key": "quantity",
+			"value": ""
+		}
+	]
+}

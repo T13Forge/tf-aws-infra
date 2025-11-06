@@ -46,6 +46,12 @@ variable "target_az" {
   default     = "us-east-1a"
 }
 
+variable "create_ec2_instance" {
+  description = "Create an EC2 instance directly not part of ASG"
+  type        = bool
+  default     = false
+}
+
 variable "key_name" {
   description = "Existing EC2 key pair name (for SSH); leave empty to skip"
   type        = string
@@ -56,11 +62,6 @@ variable "app_port" {
   description = "Port your application listens on"
   type        = number
   default     = 8081
-}
-
-variable "enable_ipv6" {
-  type    = bool
-  default = true
 }
 
 variable "public_key_path" {
@@ -92,12 +93,6 @@ variable "db_username" {
   type        = string
   default     = "csye6225_user"
 }
-
-# variable "db_password" {
-#   description = "Master password for RDS"
-#   type        = string
-#   sensitive   = true
-# }
 
 variable "db_instance_class" {
   description = "RDS instance class"
@@ -155,22 +150,30 @@ variable "route53_zone_name" {
   type        = string
 }
 
-variable "app_public_ip" {
-  description = "Fallback IP if no in-plan EC2 resource is referenced"
-  type        = string
-  default     = ""
+variable "enable_ssh" {
+  description = "Enable SSH (port 22) access for admin management"
+  type        = bool
+  default     = true
 }
 
-variable "record_name" {
-  description = "Record name inside the zone; empty string for apex"
+variable "my_ip_cidr" {
+  description = "Public IPv4 CIDR allowed to SSH into EC2 (e.g., 35.27.81.142/32)"
   type        = string
-  default     = ""
+  default     = "0.0.0.0/0"
 }
 
-variable "record_ttl" {
-  description = "TTL for A records"
-  type        = number
-  default     = 300
+# Path used by the ALB Target Group to perform health checks on EC2 instances.
+# Make sure your application responds with HTTP 200 on this endpoint.
+variable "health_check_path" {
+  description = "HTTP path for ALB Target Group health checks (e.g. /healthz)"
+  type        = string
+  default     = "/healthz"
+}
+
+variable "template_name" {
+  description = "name for EC2 template used by ASG"
+  type        = string
+  default     = "csye6225_asg"
 }
 
 variable "tags" {
