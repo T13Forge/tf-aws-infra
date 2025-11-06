@@ -18,6 +18,12 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
 - RDS PostgreSQL instance in private subnets (with DB subnet group & SG)
 - IAM Role and Instance Profile for EC2 to access S3
 - S3 bucket for product image storage
+- Application Load Balancer (ALB) with security group for HTTP/HTTPS traffic
+- Target Group and Health Checks (e.g., /healthz)
+- Launch Template defining EC2 configuration (AMI, user_data, IAM role, etc.)
+- Auto Scaling Group (ASG) managing EC2 instances across private subnets
+- CloudWatch Alarms (CPU utilization) triggering scale in/out
+- Route 53 DNS record pointing to the ALB DNS name
 
 ### Key Features
 
@@ -65,7 +71,42 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
 
 ---
 
-## EC2 Instance
+## Application Load Balancer & Auto Scaling Group (replaces single EC2)
+
+The previous single-EC2 setup is now replaced by a load-balanced, auto-scaled design.
+
+### Components Overview
+
+- **Application Load Balancer (ALB)**  
+  Handles incoming HTTP/HTTPS traffic from the internet and distributes requests to healthy EC2 instances in private subnets.
+  - Publicly accessible via port 80/443
+  - Health check path: `/healthz` (configurable via `var.health_check_path`)
+  - Security group allows inbound 80/443 from the internet
+
+- **Target Group**  
+  Contains the backend EC2 instances managed by the Auto Scaling Group.  
+  ALB forwards requests to targets based on health checks.
+
+- **Launch Template**  
+  Defines the EC2 configuration used by the ASG, including:
+  - AMI ID (custom image built via Packer)
+  - Instance type
+  - IAM role (for S3 access)
+  - user_data (to install and start the web app)
+  - Security group (only allows inbound traffic from ALB SG)
+
+- **Auto Scaling Group (ASG)**  
+  Automatically manages EC2 instance count based on CPU utilization.  
+  - Minimum, desired, and maximum capacity defined in variables  
+  - Health check type: EC2 + ELB  
+  - Spans multiple private subnets for high availability
+
+- **CloudWatch Alarms**  
+  Trigger scale-out when CPU > 5%, and scale-in when CPU < 3% (example values).  
+  These alarms are linked to the ASG policy.
+
+- **Route 53 DNS**  
+  Points a friendly domain name (e.g. `dev.isaactai13.me`) to the ALB DNS name via an A record.
 
 This Terraform setup also provisions an EC2 instance inside the created VPC.
 
@@ -82,18 +123,27 @@ EC2 Configuration Overview
 
 ### How It Works
 
-- The public key defined in public_key_path will be uploaded to AWS as an EC2 Key Pair.
-You can later connect using:
-
-  ```shell
-  ssh -i ~/.ssh/aws_key.pem ubuntu@<EC2-Public-IP>
-  ```
-
-- The EC2 instance will be launched in the public subnet of the selected Availability Zone.
-If you set subnet_tier = "private", it will launch in the private subnet instead (without public IP).
-- The app_port (e.g. 8081) defines the custom application port opened in the security group.
+- When you run terraform apply, the Launch Template and Auto Scaling Group are created.
+The ASG automatically launches EC2 instances (using the custom AMI built via Packer) into private subnets.
+- These instances are not directly accessible via public IP.
+Instead, traffic enters through the Application Load Balancer (ALB),
+which is deployed in public subnets and routes requests to the healthy instances in the private subnets.
+- The ALB health check path (defined by var.health_check_path, e.g., /healthz)
+ensures that only healthy EC2 instances receive traffic.
+- The Route 53 record (e.g. dev.isaactai13.me) maps to the ALB DNS name,
+so users can access your application via a friendly domain.
+- The Auto Scaling Group dynamically adjusts the number of EC2 instances based on CloudWatch CPU metrics:
+  - Scale out when average CPU > threshold (e.g., 5%)
+  - Scale in when CPU < threshold (e.g., 3%)
+- Each new instance launched by the ASG automatically:
+  - Retrieves its configuration (environment variables, database endpoint) via user_data.sh
+  - Connects securely to RDS in private subnets
+  - Uses the attached IAM Role to upload images to the S3 bucket
 
 ### EC2 ↔️ RDS Integration
+
+All EC2 instances launched by the Auto Scaling Group connect to RDS using environment variables passed through `user_data.sh`.  
+Each instance runs in private subnets with outbound access through the NAT gateway.
 
 - The EC2 instance connects to RDS on startup via user_data.sh, which injects RDS environment variables into the application’s .env file:
 - The EC2 instance must be launched in a public subnet, while RDS remains in private subnets.
@@ -132,6 +182,15 @@ Configuration Overview
   - Read (GetObject)
   - Delete (DeleteObject)
   - List (ListBucket)
+
+## 🧩 Scaling Behavior
+
+This setup implements dynamic scaling for web application instances:
+
+- **Scale Out**: Triggered when average CPU utilization exceeds threshold (e.g., 5%)
+- **Scale In**: Triggered when CPU utilization falls below threshold (e.g., 3%)
+- **CloudWatch Alarms** are defined in Terraform and linked to the ASG
+- **Launch Template** ensures that every new instance boots with the correct app and configuration
 
 ---
 
