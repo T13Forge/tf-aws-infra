@@ -290,6 +290,58 @@ You can also view them via: `terraform output`
 
 ---
 
+當然可以 👍
+以下是完整可直接貼進你 README 的 Markdown 版本（語法正確、排版一致）👇
+
+⸻
+
+
+## 🧪 Postman & Newman Testing
+
+After the infrastructure is deployed, you can run automated API load tests using **Postman + Newman**.
+
+### 🧩 Setup
+
+1. Make sure you have **Node.js** and **Newman** installed:
+
+```bash
+npm install -g newman
+```
+
+2. In your project root, create a folder named imgs and place a test image inside:
+
+```bash
+mkdir imgs
+cp ~/Desktop/image.png imgs/
+```
+
+3. Export your Postman collection and environment files:
+
+- NU_6255_Cloud_Automation.postman_collection.json
+- env.json (your Postman environment variables)
+
+4. Confirm your upload img request in the collection references the file correctly:
+
+"src": ["imgs/image.png"]
+
+
+🚀 Run Load Test with Newman
+
+Execute the following command in your project directory:
+
+```sh
+newman run NU_6255_Cloud_Automation.postman_collection.json \
+  -e env.json \
+  --working-dir . \
+  --iteration-count 1000
+```
+
+- --working-dir . ensures Newman can locate the image under imgs/
+- --iteration-count 1000 simulates repeated requests (use smaller values for quick tests)
+- Your collection scripts will automatically create users, products, upload images, and verify API correctness for each iteration.
+
+---
+
 ## 🧹 Clean Up
 
 To destroy the specific Workspace's infrastructure, select and destroy only that workspace's env
