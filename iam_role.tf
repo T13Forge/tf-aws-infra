@@ -198,3 +198,21 @@ resource "aws_iam_role_policy" "lambda_ses_send" {
     }]
   })
 }
+
+# Allow lambda to r/w items in the DynamoDB table
+# to perform deduplication
+resource "aws_iam_role_policy" "lambda_dedup_policy" {
+  name = "lambda-dedup-policy"
+  role = aws_iam_role.lambda_email_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = ["dynamodb:PutItem", "dynamodb:GetItem"]
+        Resource = aws_dynamodb_table.sent_emails.arn
+      }
+    ]
+  })
+}
