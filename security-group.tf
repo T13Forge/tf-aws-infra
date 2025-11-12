@@ -26,6 +26,24 @@ resource "aws_vpc_security_group_egress_rule" "lb_all_out" {
   ip_protocol       = "-1"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "lb_ingress_ipv6" {
+  for_each          = toset([for p in local.lb_ingress_ports : tostring(p)])
+  security_group_id = aws_security_group.lb_sg.id
+  cidr_ipv6         = "::/0"
+  from_port         = tonumber(each.value)
+  to_port           = tonumber(each.value)
+  ip_protocol       = "tcp"
+  description       = "Allow TCP ${each.value} from anywhere (IPv6)"
+}
+
+resource "aws_vpc_security_group_egress_rule" "lb_all_out_ipv4" {
+  security_group_id = aws_security_group.lb_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+  description       = "Allow all outbound traffic (IPv4)"
+}
+
+
 #----------------------
 # Web App SG
 #----------------------

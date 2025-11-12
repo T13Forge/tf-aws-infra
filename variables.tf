@@ -176,6 +176,18 @@ variable "template_name" {
   default     = "csye6225_asg"
 }
 
+# Verified sender email address used by SES
+variable "verifiedSenderEmail" {
+  description = "The SES verified email address used as the 'From' field for outgoing messages"
+  type        = string
+}
+
+# Base URL for the email verification link
+variable "verificationEndPoint" {
+  description = "The base URL for the /validateEmail endpoint used in verification emails"
+  type        = string
+}
+
 variable "tags" {
   description = "Common tags applied to all resources"
   type        = map(string)
