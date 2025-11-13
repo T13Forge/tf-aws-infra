@@ -14,7 +14,7 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type             = "redirect"
+    type = "redirect"
 
     redirect {
       port        = "443"
@@ -26,9 +26,9 @@ resource "aws_lb_listener" "http" {
 
 # enable https with AWS ACM
 data "aws_acm_certificate" "dev_cert" {
-  domain       = "*.${var.domain_name}"
-  most_recent  = true
-  statuses     = ["ISSUED"]
+  domain      = "*.${var.domain_name}"
+  most_recent = true
+  statuses    = ["ISSUED"]
 }
 
 resource "aws_lb_listener" "https" {

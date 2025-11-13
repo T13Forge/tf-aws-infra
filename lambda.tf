@@ -4,10 +4,10 @@ resource "aws_lambda_permission" "allow_sns_invoke" {
   function_name = aws_lambda_function.email_sender.function_name
 
   # Grant SNS service permission to invoke this Lambda
-  principal     = "sns.amazonaws.com"
-  
+  principal = "sns.amazonaws.com"
+
   # Restrict invocation to only this specific SNS topic for security
-  source_arn    = aws_sns_topic.user_signup.arn
+  source_arn = aws_sns_topic.user_signup.arn
 }
 
 # package lambda directory as a ZIP for Lambda deployment
