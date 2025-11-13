@@ -7,7 +7,7 @@ resource "aws_sns_topic" "user_signup" {
 # 'endpoint' specifies **the subscriber** — in this case, the Lambda function ARN
 # that will receive (be invoked with) every message published to the topic.
 resource "aws_sns_topic_subscription" "lambda_sub" {
-  topic_arn = aws_ans_topic.user_signup.arn
+  topic_arn = aws_sns_topic.user_signup.arn
   protocol  = "lambda"
   endpoint  = aws_lambda_function.email_sender.arn
 }

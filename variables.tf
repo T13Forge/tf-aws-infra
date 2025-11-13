@@ -190,7 +190,7 @@ variable "verificationEndPoint" {
 
 variable "account_id" {
   description = "SNS resource location"
-  type = string
+  type        = string
 }
 
 variable "tags" {

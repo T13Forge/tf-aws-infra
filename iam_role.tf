@@ -209,8 +209,8 @@ resource "aws_iam_role_policy" "lambda_dedup_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow",
-        Action = ["dynamodb:PutItem", "dynamodb:GetItem"]
+        Effect   = "Allow",
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem"]
         Resource = aws_dynamodb_table.sent_emails.arn
       }
     ]

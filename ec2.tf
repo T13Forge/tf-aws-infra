@@ -55,9 +55,9 @@ resource "aws_instance" "app" {
     db_username = var.db_username
     db_password = random_password.rds.result
 
-    aws_region = var.region
-    s3_bucket  = aws_s3_bucket.images.bucket
-    account_id = var.account_id
+    aws_region     = var.region
+    s3_bucket      = aws_s3_bucket.images.bucket
+    account_id     = var.account_id
     sns_topic_name = aws_sns_topic.user_signup.name
   })
 
@@ -100,9 +100,9 @@ resource "aws_launch_template" "app" {
     db_username = var.db_username
     db_password = random_password.rds.result
 
-    aws_region = var.region
-    s3_bucket  = aws_s3_bucket.images.bucket
-    account_id = var.account_id
+    aws_region     = var.region
+    s3_bucket      = aws_s3_bucket.images.bucket
+    account_id     = var.account_id
     sns_topic_name = aws_sns_topic.user_signup.name
   }))
 
