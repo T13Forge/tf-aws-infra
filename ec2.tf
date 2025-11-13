@@ -57,6 +57,8 @@ resource "aws_instance" "app" {
 
     aws_region = var.region
     s3_bucket  = aws_s3_bucket.images.bucket
+    account_id = var.account_id
+    sns_topic_name = aws_sns_topic.user_signup.name
   })
 
   tags = {
@@ -100,6 +102,8 @@ resource "aws_launch_template" "app" {
 
     aws_region = var.region
     s3_bucket  = aws_s3_bucket.images.bucket
+    account_id = var.account_id
+    sns_topic_name = aws_sns_topic.user_signup.name
   }))
 
   tag_specifications {
