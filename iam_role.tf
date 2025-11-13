@@ -11,6 +11,7 @@ resource "aws_iam_role" "app_ec2_role" {
     }]
   })
 }
+
 # Instance Profile is a container for the IAM Role.
 # EC2 cannot directly attach an IAM Role — it must attach an Instance Profile instead.
 # The profile allows EC2 to assume the role and get temporary credentials automatically.
@@ -99,4 +100,126 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_agent" {
 resource "aws_iam_role_policy_attachment" "ssm_core" {
   role       = aws_iam_role.app_ec2_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# ------------------------
+# EC2 publish to SNS Topic
+# ------------------------
+
+# policy for EC2 can publish msg to subscribed SND Topic
+resource "aws_iam_role_policy" "app_publish_sns" {
+  name = "app-publish-sns"
+  role = aws_iam_role.app_ec2_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = ["sns:Publish"],
+      Resource = aws_sns_topic.user_signup.arn
+    }]
+  })
+}
+
+# -------------------
+# Email Lambda Role
+# -------------------
+
+# Assume role
+resource "aws_iam_role" "lambda_email_role" {
+  name = "lambda-email-sender-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "lambda.amazonaws.com" },
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+# Get current AWS account identity (used to build ARNs)
+data "aws_caller_identity" "me" {}
+
+# Logs
+# Basic logging permissions for the Lambda function.
+# Allows the function to create log groups/streams and send log events to CloudWatch Logs.
+resource "aws_iam_role_policy" "lambda_logs" {
+  name = "lambda-basic-logs"
+  role = aws_iam_role.lambda_email_role.id
+
+  # Lambda will automatically create a log group in CloudWatch e.g. /aws/lambda/<function-name>
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+      Resource = "arn:aws:logs:${var.region}:${data.aws_caller_identity.me.account_id}:log-group:/aws/lambda/*"
+    }]
+  })
+}
+
+# Secrets
+# Allow the Lambda function to read the Mailgun API key
+# stored in AWS Secrets Manager.
+resource "aws_iam_role_policy" "lambda_secrets_read" {
+  name = "lambda-secrets-read"
+  role = aws_iam_role.lambda_email_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = ["secretsmanager:GetSecretValue"],
+      Resource = aws_secretsmanager_secret.mailgun.arn
+    }]
+  })
+}
+
+# KMS decrypt (for that secret's CMK)
+resource "aws_iam_role_policy" "lambda_kms_decrypt" {
+  name = "lambda-kms-decrypt"
+  role = aws_iam_role.lambda_email_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = ["kms:Decrypt"],
+      Resource = aws_kms_alias.secrets_key_alias.arn
+    }]
+  })
+}
+
+# SES send
+resource "aws_iam_role_policy" "lambda_ses_send" {
+  name = "lambda-ses-send"
+  role = aws_iam_role.lambda_email_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = ["ses:SendEmail", "ses:SendRawEmail"],
+      Resource = "*"
+    }]
+  })
+}
+
+# Allow lambda to r/w items in the DynamoDB table
+# to perform deduplication
+resource "aws_iam_role_policy" "lambda_dedup_policy" {
+  name = "lambda-dedup-policy"
+  role = aws_iam_role.lambda_email_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem"],
+        Resource = aws_dynamodb_table.sent_emails.arn
+      }
+    ]
+  })
 }

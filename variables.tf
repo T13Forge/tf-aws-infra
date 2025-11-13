@@ -145,7 +145,7 @@ variable "s3_prefix" {
   default     = ""
 }
 
-variable "route53_zone_name" {
+variable "domain_name" {
   description = "Public hosted zone name for this environment (e.g., dev.domain.tld or demo.domain.tld)"
   type        = string
 }
@@ -174,6 +174,27 @@ variable "template_name" {
   description = "name for EC2 template used by ASG"
   type        = string
   default     = "csye6225_asg"
+}
+
+# Verified sender email address used by SES
+variable "verifiedSenderEmail" {
+  description = "The SES verified email address used as the 'From' field for outgoing messages"
+  type        = string
+}
+
+# Base URL for the email verification link
+variable "verificationEndPoint" {
+  description = "The base URL for the /validateEmail endpoint used in verification emails"
+  type        = string
+}
+
+variable "mailgun_domain" {
+  type = string
+}
+
+variable "mailgun_api_key" {
+  type      = string
+  sensitive = true
 }
 
 variable "tags" {
