@@ -145,7 +145,7 @@ variable "s3_prefix" {
   default     = ""
 }
 
-variable "route53_zone_name" {
+variable "domain_name" {
   description = "Public hosted zone name for this environment (e.g., dev.domain.tld or demo.domain.tld)"
   type        = string
 }
