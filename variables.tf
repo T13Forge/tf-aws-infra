@@ -176,12 +176,6 @@ variable "template_name" {
   default     = "csye6225_asg"
 }
 
-variable "account_id" {
-  description = "SNS resource location"
-  type        = string
-}
-
-
 # Verified sender email address used by SES
 variable "verifiedSenderEmail" {
   description = "The SES verified email address used as the 'From' field for outgoing messages"

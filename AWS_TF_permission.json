@@ -114,6 +114,18 @@
                 "arn:aws:s3:::awsserverlessrepo-changesets*",
                 "arn:aws:s3:::secrets-manager-rotation-apps-*/*"
             ]
+        },
+        {
+            "Sid": "FullKMSAccess",
+            "Effect": "Allow",
+            "Action": "kms:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "FullDynamoDBAccess",
+            "Effect": "Allow",
+            "Action": "dynamodb:*",
+            "Resource": "*"
         }
     ]
 }
