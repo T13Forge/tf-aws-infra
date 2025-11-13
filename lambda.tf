@@ -2,7 +2,11 @@ resource "aws_lambda_permission" "allow_sns_invoke" {
   statement_id  = "AllowExecutionFromSNS"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.email_sender.function_name
-  principal     = "sns.amazon.com"
+
+  # Grant SNS service permission to invoke this Lambda
+  principal     = "sns.amazonaws.com"
+  
+  # Restrict invocation to only this specific SNS topic for security
   source_arn    = aws_sns_topic.user_signup.arn
 }
 
