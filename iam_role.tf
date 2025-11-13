@@ -138,6 +138,9 @@ resource "aws_iam_role" "lambda_email_role" {
   })
 }
 
+# Get current AWS account identity (used to build ARNs)
+data "aws_caller_identity" "me" {}
+
 # Logs
 resource "aws_iam_role_policy" "lambda_logs" {
   name = "lambda-basic-logs"

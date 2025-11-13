@@ -22,8 +22,7 @@ DB_USERNAME=${db_username}
 DB_PASSWORD=${db_password}
 AWS_REGION=${aws_region}
 S3_BUCKET=${s3_bucket}
-ACCOUNT_ID=${account_id}
-SNS_TOPIC_NAME=${sns_topic_name}
+SNS_TOPIC_ARN=${sns_topic_arn}
 EOF
 
 chown "${app_user}:${app_group}" "$ENV_FILE" # Change owner of the .env file to normal user
