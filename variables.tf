@@ -176,6 +176,12 @@ variable "template_name" {
   default     = "csye6225_asg"
 }
 
+variable "account_id" {
+  description = "SNS resource location"
+  type        = string
+}
+
+
 # Verified sender email address used by SES
 variable "verifiedSenderEmail" {
   description = "The SES verified email address used as the 'From' field for outgoing messages"
@@ -188,9 +194,13 @@ variable "verificationEndPoint" {
   type        = string
 }
 
-variable "account_id" {
-  description = "SNS resource location"
-  type        = string
+variable "mailgun_domain" {
+  type = string
+}
+
+variable "mailgun_api_key" {
+  type      = string
+  sensitive = true
 }
 
 variable "tags" {

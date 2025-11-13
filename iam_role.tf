@@ -164,7 +164,7 @@ resource "aws_iam_role_policy" "lambda_secrets_read" {
     Statement = [{
       Effect   = "Allow",
       Action   = ["secretsmanager:GetSecretValue"],
-      Resource = aws_secretsmanager_secret.email_credentials.arn
+      Resource = aws_secretsmanager_secret.mailgun.arn
     }]
   })
 }
@@ -179,7 +179,7 @@ resource "aws_iam_role_policy" "lambda_kms_decrypt" {
     Statement = [{
       Effect   = "Allow",
       Action   = ["kms:Decrypt"],
-      Resource = aws_kms_key.secrets_key.arn
+      Resource = aws_kms_alias.secrets_key_alias.arn
     }]
   })
 }
