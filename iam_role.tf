@@ -142,6 +142,8 @@ resource "aws_iam_role" "lambda_email_role" {
 data "aws_caller_identity" "me" {}
 
 # Logs
+# Basic logging permissions for the Lambda function.
+# Allows the function to create log groups/streams and send log events to CloudWatch Logs.
 resource "aws_iam_role_policy" "lambda_logs" {
   name = "lambda-basic-logs"
   role = aws_iam_role.lambda_email_role.id
@@ -158,12 +160,14 @@ resource "aws_iam_role_policy" "lambda_logs" {
 }
 
 # Secrets
+# Allow the Lambda function to read the Mailgun API key
+# stored in AWS Secrets Manager.
 resource "aws_iam_role_policy" "lambda_secrets_read" {
   name = "lambda-secrets-read"
   role = aws_iam_role.lambda_email_role.id
 
   policy = jsonencode({
-    Version : "2012-10-17",
+    Version = "2012-10-17",
     Statement = [{
       Effect   = "Allow",
       Action   = ["secretsmanager:GetSecretValue"],
@@ -178,7 +182,7 @@ resource "aws_iam_role_policy" "lambda_kms_decrypt" {
   role = aws_iam_role.lambda_email_role.id
 
   policy = jsonencode({
-    Version : "2012-10-17",
+    Version = "2012-10-17",
     Statement = [{
       Effect   = "Allow",
       Action   = ["kms:Decrypt"],
@@ -193,7 +197,7 @@ resource "aws_iam_role_policy" "lambda_ses_send" {
   role = aws_iam_role.lambda_email_role.id
 
   policy = jsonencode({
-    Version : "2012-10-17",
+    Version = "2012-10-17",
     Statement = [{
       Effect   = "Allow",
       Action   = ["ses:SendEmail", "ses:SendRawEmail"],
@@ -209,11 +213,11 @@ resource "aws_iam_role_policy" "lambda_dedup_policy" {
   role = aws_iam_role.lambda_email_role.id
 
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2012-10-17",
     Statement = [
       {
         Effect   = "Allow",
-        Action   = ["dynamodb:PutItem", "dynamodb:GetItem"]
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem"],
         Resource = aws_dynamodb_table.sent_emails.arn
       }
     ]

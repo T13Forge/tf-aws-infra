@@ -25,8 +25,8 @@ resource "random_password" "rds" {
 }
 
 resource "aws_secretsmanager_secret" "rds" {
-  name                    = "${var.name_prefix}-rds-master-strong-password"
-  description             = "Master password for the ${var.name_prefix} RDS instance"
+  name        = "${var.name_prefix}-rds-master-strong-password"
+  description = "Master password for the ${var.name_prefix} RDS instance"
 
   # Use a customer-managed KMS key to encrypt the secret.
   kms_key_id = aws_kms_alias.secrets_key_alias.arn

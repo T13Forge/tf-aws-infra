@@ -1,9 +1,9 @@
 # EBS
 resource "aws_kms_key" "ec2_key" {
-  description         = "Customer managed KMS key for EC2 EBS volume encryption"
-  enable_key_rotation = true  # AWS rotates the key automatically
+  description             = "Customer managed KMS key for EC2 EBS volume encryption"
+  enable_key_rotation     = true # AWS rotates the key automatically
   rotation_period_in_days = 90
-  
+
   tags = {
     Name = "${var.name_prefix}-kms-ec2"
   }
@@ -16,10 +16,10 @@ resource "aws_kms_alias" "ec2_key_alias" {
 
 # RDS
 resource "aws_kms_key" "rds_key" {
-  description         = "Customer managed KMS key for RDS instance encryption"
-  enable_key_rotation = true  # AWS rotates the key automatically
+  description             = "Customer managed KMS key for RDS instance encryption"
+  enable_key_rotation     = true # AWS rotates the key automatically
   rotation_period_in_days = 90
-  
+
   tags = {
     Name = "${var.name_prefix}-kms-rds"
   }
@@ -36,10 +36,10 @@ resource "aws_kms_alias" "rds_key_alias" {
 
 # S3 bucket
 resource "aws_kms_key" "s3_key" {
-  description         = "Customer managed KMS key for S3 object encryption"
-  enable_key_rotation = true  # AWS rotates the key automatically
+  description             = "Customer managed KMS key for S3 object encryption"
+  enable_key_rotation     = true # AWS rotates the key automatically
   rotation_period_in_days = 90
-  
+
   tags = {
     Name = "${var.name_prefix}-kms-s3"
   }
@@ -55,7 +55,7 @@ resource "aws_kms_key" "secrets_key" {
   enable_key_rotation = true
 
   tags = {
-    Name        = "${var.name_prefix}-kms-secrets"
+    Name = "${var.name_prefix}-kms-secrets"
   }
 }
 
