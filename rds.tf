@@ -24,13 +24,19 @@ resource "random_password" "rds" {
   override_special = "!#$%&'()*+,-.:;<=>?[]^_{|}~"
 }
 
-# Store the generated pwd in AWS Secrets Manager
 resource "aws_secretsmanager_secret" "rds" {
   name                    = "${var.name_prefix}-rds-master-strong-password"
   description             = "Master password for the ${var.name_prefix} RDS instance"
+
+  # Use a customer-managed KMS key to encrypt the secret.
+  kms_key_id = aws_kms_alias.secrets_key_alias.arn
+
+  # Set the recovery window to 0 days so the secret is deleted immediately
+  # when destroyed by Terraform, instead of waiting for the default 30-day recovery period.
   recovery_window_in_days = 0
 }
 
+# Store the generated pwd in AWS Secrets Manager
 resource "aws_secretsmanager_secret_version" "rds" {
   secret_id     = aws_secretsmanager_secret.rds.id
   secret_string = random_password.rds.result
@@ -52,6 +58,12 @@ resource "aws_db_instance" "db" {
   port                = var.db_port # 5432
   multi_az            = false
   publicly_accessible = false
+
+  # Enable encryption at rest for the database storage
+  storage_encrypted = true
+
+  # Use the customer-managed KMS key dedicated for RDS encryption
+  kms_key_id = aws_kms_alias.rds_key_alias.arn
 
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.db_private.name

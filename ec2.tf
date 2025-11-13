@@ -88,6 +88,20 @@ resource "aws_launch_template" "app" {
     associate_public_ip_address = true
   }
 
+  # Encrypt the root EBS volume with KMS key
+  block_device_mappings {
+    device_name = "/dev/xvda" # Root volume device name (varies by AMI)
+
+    ebs {
+      volume_size = 20 # or var.root_volume_size if you have one
+      volume_type = "gp3"
+      encrypted   = true
+
+      # Use the customer-managed KMS key dedicated for EC2 EBS encryption.
+      kms_key_id = aws_kms_alias.ec2_key_alias.arn
+    }
+  }
+
   user_data = base64encode(templatefile("${path.module}/scripts/user_data.sh", {
     app_user     = var.app_user
     app_group    = var.app_group

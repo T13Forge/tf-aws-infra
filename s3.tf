@@ -23,7 +23,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "images" {
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      # Use AWS KMS for server-side encryption instead of S3-managed AES256
+      sse_algorithm = "aws:kms"
+
+      # Encrypt objects with our customer-managed KMS key dedicated for S3.
+      kms_master_key_id = aws_kms_alias.s3_key_alias.arn
     }
   }
 }
