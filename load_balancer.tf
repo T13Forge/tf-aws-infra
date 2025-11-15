@@ -26,7 +26,7 @@ resource "aws_lb_listener" "http" {
 
 # enable https with AWS ACM
 data "aws_acm_certificate" "dev_cert" {
-  domain      = "*.${var.domain_name}"
+  domain      = var.domain_name
   most_recent = true
   statuses    = ["ISSUED"]
 }
