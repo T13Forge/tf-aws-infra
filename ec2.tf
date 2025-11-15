@@ -45,7 +45,6 @@ resource "aws_launch_template" "app" {
     app_group    = var.app_group
     app_dir      = var.app_dir
     service_name = var.service_name
-    app_port     = var.app_port
 
     db_host     = aws_db_instance.db.address
     db_port     = aws_db_instance.db.port

@@ -21,7 +21,7 @@ resource "aws_db_subnet_group" "db_private" {
 resource "random_password" "rds" {
   length           = 16
   special          = true
-  override_special = "!#$%&'()*+,-.:;<=>?[]^_{|}~"
+  override_special = "!#%&'()*+,-.:;<=>?[]^_{|}~"
 }
 
 resource "aws_secretsmanager_secret" "rds" {
