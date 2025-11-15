@@ -46,6 +46,7 @@ resource "aws_lambda_function" "email_sender" {
 resource "aws_secretsmanager_secret" "mailgun" {
   name       = "${var.name_prefix}-mailgun"
   kms_key_id = aws_kms_alias.secrets_key_alias.arn
+  recovery_window_in_days = 0
 }
 
 

@@ -32,6 +32,43 @@ systemctl daemon-reload # let systemd reload all the .service file
 systemctl enable "${service_name}.service"
 systemctl restart "${service_name}.service"
 
+# Wait for the service to be active
+info "Waiting for ${service_name} to start..."
+sleep 5
+
+# Verify the service is running
+if systemctl is-active --quiet "${service_name}.service"; then
+  log "${service_name} service is active"
+else
+  err "${service_name} service failed to start"
+  systemctl status "${service_name}.service" --no-pager
+  exit 1
+fi
+
+# Wait for the application to be ready to accept connections
+# Check if the app is listening on the configured app_port
+info "Waiting for application to be ready on port ${app_port}..."
+MAX_WAIT=120
+WAIT_COUNT=0
+while [ $$WAIT_COUNT -lt $$MAX_WAIT ]; do
+  if netstat -tln 2>/dev/null | grep -q ":${app_port} " || ss -tln 2>/dev/null | grep -q ":${app_port} "; then
+    log "Application is listening on port ${app_port}"
+    break
+  fi
+  sleep 2
+  WAIT_COUNT=$$((WAIT_COUNT + 2))
+  if [ $$((WAIT_COUNT % 10)) -eq 0 ]; then
+    info "Still waiting for application to start... ($${WAIT_COUNT}s elapsed)"
+  fi
+done
+
+if [ $$WAIT_COUNT -ge $$MAX_WAIT ]; then
+  err "Application did not start listening on port ${app_port} within $${MAX_WAIT} seconds"
+  systemctl status "${service_name}.service" --no-pager
+  journalctl -u "${service_name}.service" -n 50 --no-pager
+  exit 1
+fi
+
 info "=== Web App started successfully ==="
 
 # ---------------------------------------------------------------------------

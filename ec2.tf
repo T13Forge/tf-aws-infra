@@ -27,24 +27,25 @@ resource "aws_launch_template" "app" {
   }
 
   # Encrypt the root EBS volume with KMS key
-  # block_device_mappings {
-  #   device_name = "/dev/xvda" # Root volume device name (varies by AMI)
-  #
-  #   ebs {
-  #     volume_size = 20 # or var.root_volume_size if you have one
-  #     volume_type = "gp3"
-  #     encrypted   = true
-  #
-  #     # Use the customer-managed KMS key dedicated for EC2 EBS encryption.
-  #     kms_key_id = aws_kms_alias.ec2_key_alias.arn
-  #   }
-  # }
+  block_device_mappings {
+    device_name = "/dev/xvda" # Root volume device name (varies by AMI)
+
+    ebs {
+      volume_size = 20 # or var.root_volume_size if you have one
+      volume_type = "gp3"
+      encrypted   = true
+
+      # Use the customer-managed KMS key dedicated for EC2 EBS encryption.
+      kms_key_id = aws_kms_alias.ec2_key_alias.arn
+    }
+  }
 
   user_data = base64encode(templatefile("${path.module}/scripts/user_data.sh", {
     app_user     = var.app_user
     app_group    = var.app_group
     app_dir      = var.app_dir
     service_name = var.service_name
+    app_port     = var.app_port
 
     db_host     = aws_db_instance.db.address
     db_port     = aws_db_instance.db.port
@@ -76,7 +77,12 @@ resource "aws_autoscaling_group" "app_asg" {
 
   # Time (in seconds) to wait after a new instance launches
   # before starting health checks — allows the app to fully start up.
-  health_check_grace_period = 60
+  # Increased to 300 seconds (5 minutes) to allow:
+  # - EC2 instance to fully boot
+  # - User data script to complete
+  # - Application service to start and connect to database
+  # - Application to be ready to accept HTTP requests
+  health_check_grace_period = 300
 
   default_cooldown = 60
 
