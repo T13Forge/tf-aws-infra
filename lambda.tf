@@ -15,7 +15,7 @@ data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../serverless"
   output_path = "${path.module}/dist/email_sender.zip"
-  excludes    = ["node_modules", ".git", "dist", "scripts"]
+  excludes    = [".git", "dist", "scripts"]
 }
 
 resource "aws_lambda_function" "email_sender" {
