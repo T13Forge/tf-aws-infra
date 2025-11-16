@@ -15,7 +15,7 @@ data "archive_file" "lambda_zip" {
   type        = "zip"
   source_dir  = "${path.module}/../serverless"
   output_path = "${path.module}/dist/email_sender.zip"
-  excludes    = ["node_modules", ".git", "dist"]
+  excludes    = ["node_modules", ".git", "dist", "scripts"]
 }
 
 resource "aws_lambda_function" "email_sender" {
@@ -38,6 +38,7 @@ resource "aws_lambda_function" "email_sender" {
       FROM_EMAIL        = var.verifiedSenderEmail  # Verified sender email in SES
       VERIFY_URL_BASE   = var.verificationEndPoint # Your web app verification endpoint
       MAILGUN_DOMAIN    = var.mailgun_domain       # e.g. "mg.isaactai13.me"
+      DYNAMODB_TABLE    = aws_dynamodb_table.sent_emails.name # DynamoDB table name for deduplication
     }
   }
 }
