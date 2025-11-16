@@ -96,6 +96,37 @@ resource "aws_kms_key" "s3_key" {
   enable_key_rotation     = true # AWS rotates the key automatically
   rotation_period_in_days = 90
 
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "AllowRootAccountFullAccess"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowEC2RoleUseOfTheKey"
+        Effect = "Allow"
+        Principal = {
+          AWS = aws_iam_role.app_ec2_role.arn
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey",
+          "kms:CreateGrant"
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+
   tags = {
     Name = "${var.name_prefix}-kms-s3"
   }
