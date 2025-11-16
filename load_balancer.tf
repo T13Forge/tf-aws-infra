@@ -25,7 +25,8 @@ resource "aws_lb_listener" "http" {
 }
 
 # enable https with AWS ACM
-data "aws_acm_certificate" "dev_cert" {
+data "aws_acm_certificate" "cert" {
+  count       = var.demo_certificate_arn == "" ? 1 : 0
   domain      = var.domain_name
   most_recent = true
   statuses    = ["ISSUED"]
@@ -36,7 +37,7 @@ resource "aws_lb_listener" "https" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = data.aws_acm_certificate.dev_cert.arn
+  certificate_arn   = var.demo_certificate_arn != "" ? var.demo_certificate_arn : data.aws_acm_certificate.cert[0].arn
 
   default_action {
     type             = "forward"

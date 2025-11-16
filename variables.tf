@@ -197,6 +197,11 @@ variable "mailgun_api_key" {
   sensitive = true
 }
 
+variable "demo_certificate_arn" {
+  description = "ACM certificate ARN for imported certificates"
+  type        = string
+}
+
 variable "tags" {
   description = "Common tags applied to all resources"
   type        = map(string)
