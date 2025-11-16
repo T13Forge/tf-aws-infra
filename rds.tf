@@ -21,14 +21,14 @@ resource "aws_db_subnet_group" "db_private" {
 resource "random_password" "rds" {
   length           = 16
   special          = true
-  override_special = "!#$%&'()*+,-.:;<=>?[]^_{|}~"
+  override_special = "!#%&'()*+,-.:;<=>?[]^_{|}~"
 }
 
 resource "aws_secretsmanager_secret" "rds" {
   name        = "${var.name_prefix}-rds-master-strong-password"
   description = "Master password for the ${var.name_prefix} RDS instance"
 
-  # Use a customer-managed KMS key to encrypt the secret.
+  # Use a customer-managed KMS key (CMK) to encrypt the secret.
   kms_key_id = aws_kms_alias.secrets_key_alias.arn
 
   # Set the recovery window to 0 days so the secret is deleted immediately
@@ -63,7 +63,7 @@ resource "aws_db_instance" "db" {
   storage_encrypted = true
 
   # Use the customer-managed KMS key dedicated for RDS encryption
-  kms_key_id = aws_kms_alias.rds_key_alias.arn
+  kms_key_id = aws_kms_key.rds_key.arn
 
   vpc_security_group_ids = [aws_security_group.db_sg.id]
   db_subnet_group_name   = aws_db_subnet_group.db_private.name
