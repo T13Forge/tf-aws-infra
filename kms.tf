@@ -107,8 +107,8 @@ resource "aws_kms_alias" "s3_key_alias" {
 }
 
 resource "aws_kms_key" "secrets_key" {
-  description         = "Customer managed KMS key for Secrets Manager (DB + email secrets)"
-  enable_key_rotation = true
+  description             = "Customer managed KMS key for Secrets Manager (DB + email secrets)"
+  enable_key_rotation     = true
   rotation_period_in_days = 90
 
   # Policy to allow Lambda and other services to decrypt secrets

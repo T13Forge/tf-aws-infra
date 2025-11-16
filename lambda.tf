@@ -35,9 +35,9 @@ resource "aws_lambda_function" "email_sender" {
   environment {
     variables = {
       MAILGUN_SECRET_ID = aws_secretsmanager_secret.mailgun.id
-      FROM_EMAIL        = var.verifiedSenderEmail  # Verified sender email in SES
-      VERIFY_URL_BASE   = var.verificationEndPoint # Your web app verification endpoint
-      MAILGUN_DOMAIN    = var.mailgun_domain       # e.g. "mg.isaactai13.me"
+      FROM_EMAIL        = var.verifiedSenderEmail             # Verified sender email in SES
+      VERIFY_URL_BASE   = var.verificationEndPoint            # Your web app verification endpoint
+      MAILGUN_DOMAIN    = var.mailgun_domain                  # e.g. "mg.isaactai13.me"
       DYNAMODB_TABLE    = aws_dynamodb_table.sent_emails.name # DynamoDB table name for deduplication
     }
   }
@@ -45,8 +45,8 @@ resource "aws_lambda_function" "email_sender" {
 
 # Secrets Manager secret for Mailgun email service credentials
 resource "aws_secretsmanager_secret" "mailgun" {
-  name       = "${var.name_prefix}-mailgun"
-  kms_key_id = aws_kms_alias.secrets_key_alias.arn
+  name                    = "${var.name_prefix}-mailgun"
+  kms_key_id              = aws_kms_alias.secrets_key_alias.arn
   recovery_window_in_days = 0
 }
 
