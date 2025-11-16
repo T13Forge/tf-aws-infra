@@ -189,14 +189,18 @@ resource "aws_iam_role_policy" "lambda_secrets_read" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect   = "Allow",
-      Action   = ["secretsmanager:GetSecretValue"],
+      Effect = "Allow",
+      Action = [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ],
       Resource = aws_secretsmanager_secret.mailgun.arn
     }]
   })
 }
 
 # KMS decrypt (for that secret's CMK)
+# Lambda needs KMS permissions to decrypt the secret stored in Secrets Manager
 resource "aws_iam_role_policy" "lambda_kms_decrypt" {
   name = "lambda-kms-decrypt"
   role = aws_iam_role.lambda_email_role.id
@@ -204,8 +208,11 @@ resource "aws_iam_role_policy" "lambda_kms_decrypt" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect   = "Allow",
-      Action   = ["kms:Decrypt"],
+      Effect = "Allow",
+      Action = [
+        "kms:Decrypt",
+        "kms:DescribeKey"
+      ],
       Resource = aws_kms_key.secrets_key.arn
     }]
   })
