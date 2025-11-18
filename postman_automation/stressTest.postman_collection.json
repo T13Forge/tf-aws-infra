@@ -15,8 +15,8 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{host}}/healthz",
-					"protocol": "http",
+					"raw": "https://{{host}}/healthz",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -73,8 +73,8 @@
 					}
 				},
 				"url": {
-					"raw": "http://{{host}}/v1/user",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/user",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -92,8 +92,8 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{host}}/v1/user/{{userId}}",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/user/{{userId}}",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -172,8 +172,8 @@
 					}
 				},
 				"url": {
-					"raw": "http://{{host}}/v1/user/{{userId}}",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/user/{{userId}}",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -253,8 +253,8 @@
 					}
 				},
 				"url": {
-					"raw": "http://{{host}}/v1/product",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/product",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -303,8 +303,8 @@
 					}
 				},
 				"url": {
-					"raw": "http://{{host}}/v1/product/{{productId}}",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/product/{{productId}}",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -347,8 +347,8 @@
 					}
 				},
 				"url": {
-					"raw": "http://{{host}}/v1/product/{{productId}}",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/product/{{productId}}",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -423,15 +423,13 @@
 						{
 							"key": "file",
 							"type": "file",
-							"src": [
-                "imgs/image.png"
-              ]
+							"src": ["imgs/image.png"]
 						}
 					]
 				},
 				"url": {
-					"raw": "http://{{host}}/v1/product/{{productId}}/image",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/product/{{productId}}/image",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -451,8 +449,8 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "http://{{host}}/v1/product/{{productId}}/image/{{imageId}}",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/product/{{productId}}/image/{{imageId}}",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -482,8 +480,8 @@
 					}
 				},
 				"url": {
-					"raw": "http://{{host}}/v1/product/{{productId}}",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/product/{{productId}}",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -529,8 +527,8 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{host}}/v1/product/{{productId}}",
-					"protocol": "http",
+					"raw": "https://{{host}}/v1/product/{{productId}}",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -549,8 +547,8 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://{{host}}/actuator/metrics",
-					"protocol": "http",
+					"raw": "https://{{host}}/actuator/metrics",
+					"protocol": "https",
 					"host": [
 						"{{host}}"
 					],
@@ -671,15 +669,15 @@
 			"value": ""
 		},
 		{
+			"key": "quantity",
+			"value": ""
+		},
+		{
 			"key": "userId",
 			"value": ""
 		},
 		{
 			"key": "productId",
-			"value": ""
-		},
-		{
-			"key": "quantity",
 			"value": ""
 		}
 	]
