@@ -185,7 +185,23 @@ resource "aws_kms_key" "secrets_key" {
             "kms:ViaService" = "secretsmanager.${var.region}.amazonaws.com"
           }
         }
-      }
+      },
+      {
+        Sid    = "AllowEC2RoleUseOfTheKey"
+        Effect = "Allow"
+        Principal = {
+          AWS = aws_iam_role.app_ec2_role.arn
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey",
+          "kms:CreateGrant"
+        ]
+        Resource = "*"
+      },
     ]
   })
 

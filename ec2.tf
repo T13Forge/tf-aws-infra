@@ -50,7 +50,7 @@ resource "aws_launch_template" "app" {
     db_port     = aws_db_instance.db.port
     db_name     = var.db_name
     db_username = var.db_username
-    db_password = random_password.rds.result
+    rds_secret_name = aws_secretsmanager_secret.rds.name
 
     aws_region    = var.region
     s3_bucket     = aws_s3_bucket.images.bucket

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -xeuo pipefail
 
 ENV_FILE="${app_dir}/.env"
 LOG_FILE="/var/log/user_data_setup.log"
@@ -14,12 +14,29 @@ info "=== Setting up environment for web app in ${app_dir} ==="
 
 mkdir -p "${app_dir}" # make sure the directory exist
 
+# Install AWS CLI v2
+apt-get update -y
+apt-get install -y unzip
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+./aws/install
+
+aws --version
+
+# retrieve pwd from Secret Manager (JSON string)
+DB_PASSWORD=$(aws secretsmanager get-secret-value \
+  --secret-id "${rds_secret_name}" \
+  --query SecretString \
+  --output text)
+
+
 cat >> "$ENV_FILE" <<EOF
 DB_HOST=${db_host}
 DB_PORT=${db_port}
 DB_NAME=${db_name}
 DB_USERNAME=${db_username}
-DB_PASSWORD=${db_password}
+DB_PASSWORD=$${DB_PASSWORD}
 AWS_REGION=${aws_region}
 S3_BUCKET=${s3_bucket}
 SNS_TOPIC_ARN=${sns_topic_arn}
