@@ -24,6 +24,11 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
 - Auto Scaling Group (ASG) managing EC2 instances across private subnets
 - CloudWatch Alarms (CPU utilization) triggering scale in/out
 - Route 53 DNS record pointing to the ALB DNS name
+- AWS Secrets Manager for secure credential storage (RDS password, Mailgun API key)
+- KMS Customer-Managed Keys (CMK) for encryption at rest (EC2 EBS, RDS, S3, Secrets Manager)
+- Lambda function for email sending (triggered by SNS)
+- SNS topic for user signup notifications
+- DynamoDB table for email deduplication
 
 ### Key Features
 
@@ -31,6 +36,8 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
 - Supports multiple environments (dev, demo) via separate .tfvars files
 - Terraform Workspaces to isolate states
 - No hardcoded values — variables and inputs are fully parameterized
+- End-to-end encryption using customer-managed KMS keys
+- Secure credential management via AWS Secrets Manager
 
 ---
 
@@ -59,9 +66,19 @@ It creates a Virtual Private Cloud (VPC) with public and private subnets, Intern
     target_az       = "us-east-1a"
 
     # DB
-    db_name              = "csye6225"
-    db_username          = "dbadmin"
+    db_name              = ""
+    db_username          = ""
     db_port              = 5432
+
+    # Email configuration
+    verifiedSenderEmail  = "noreply@yourdomain.com"
+    verificationEndPoint = "https://dev.yourdomain.com"
+    mailgun_domain       = "mg.yourdomain.com"
+    mailgun_api_key      = "your-mailgun-api-key"
+    demo_certificate_arn = ""  # Leave empty to auto-detect from ACM
+
+    # Domain
+    domain_name          = "dev.yourdomain.com"
 
     tags = {
       Project = ""
@@ -82,10 +99,13 @@ The previous single-EC2 setup is now replaced by a load-balanced, auto-scaled de
   - Publicly accessible via port 80/443
   - Health check path: `/healthz` (configurable via `var.health_check_path`)
   - Security group allows inbound 80/443 from the internet
+  - Deployed in public subnets across multiple AZs
 
 - **Target Group**  
   Contains the backend EC2 instances managed by the Auto Scaling Group.  
   ALB forwards requests to targets based on health checks.
+  - Healthy threshold: 2 consecutive successes
+  - Unhealthy threshold: 2 consecutive failures
 
 - **Launch Template**  
   Defines the EC2 configuration used by the ASG, including:
@@ -94,12 +114,15 @@ The previous single-EC2 setup is now replaced by a load-balanced, auto-scaled de
   - IAM role (for S3 access)
   - user_data (to install and start the web app)
   - Security group (only allows inbound traffic from ALB SG)
+  - Root EBS volume encrypted with customer-managed KMS key
 
 - **Auto Scaling Group (ASG)**  
   Automatically manages EC2 instance count based on CPU utilization.  
   - Minimum, desired, and maximum capacity defined in variables  
   - Health check type: EC2 + ELB  
   - Spans multiple private subnets for high availability
+  - Cooldown period: 60 seconds
+  - Spans multiple public subnets across different AZs for high availability
 
 - **CloudWatch Alarms**  
   Trigger scale-out when CPU > 5%, and scale-in when CPU < 3% (example values).  
@@ -118,8 +141,11 @@ EC2 Configuration Overview
 - SSH Key Pair: Generated from your local public key (aws_key_pair)
 - Subnet Placement: Dynamically selected by tier (public/private) and Availability Zone
 - Security Group:
-  - Ingress: TCP 22 (SSH), 80 (HTTP), 443 (HTTPS), and 8081 (your web app port)
+  - Ingress: 
+    - TCP on app port (e.g., 8081) from ALB security group only
+    - TCP 22 (SSH) from your IP only (if `var.enable_ssh = true`, restricted to `var.my_ip_cidr`)
   - Egress: All outbound traffic allowed
+- Public IP: Automatically assigned (associate_public_ip_address = true)
 
 ### How It Works
 
@@ -136,9 +162,11 @@ so users can access your application via a friendly domain.
   - Scale out when average CPU > threshold (e.g., 5%)
   - Scale in when CPU < threshold (e.g., 3%)
 - Each new instance launched by the ASG automatically:
-  - Retrieves its configuration (environment variables, database endpoint) via user_data.sh
+  - Retrieves its configuration (environment variables, database endpoint) via `user_data.sh`
+  - Retrieves RDS password from AWS Secrets Manager (encrypted with KMS)
   - Connects securely to RDS in private subnets
   - Uses the attached IAM Role to upload images to the S3 bucket
+  - Can publish messages to SNS topic for user signup notifications
 
 ### EC2 ↔️ RDS Integration
 
@@ -151,9 +179,54 @@ Each instance runs in private subnets with outbound access through the NAT gatew
 
 ### EC2 IAM Role & Instance Profile
 
-- EC2 assumes an IAM Role with S3 access permissions (policy described in the S3 section).
-- The IAM role is attached to the instance via Instance Profile.
-- This allows the web app to securely upload and delete images on S3 without hardcoding AWS credentials.
+- S3 Access: Upload, read, delete, and list objects in the images bucket (least-privilege policy)
+- Secrets Manager: Read RDS master password secret
+- KMS: Decrypt secrets and EBS volumes (for EC2, RDS, S3, and Secrets Manager keys)
+- SNS: Publish messages to user signup topic
+- CloudWatch: Create log groups/streams and send metrics (CloudWatch Agent)
+- SSM: Systems Manager access for instance management without SSH
+
+The IAM role is attached to instances via Instance Profile, allowing the web app to securely access AWS services without hardcoding credentials.
+
+---
+
+## 🔐 AWS Secrets Manager
+
+This infrastructure uses AWS Secrets Manager to securely store sensitive credentials.
+
+### Secrets Stored
+
+1. RDS Master Password
+2. Mailgun API Key
+
+### Access Control
+
+- EC2 IAM role has permissions to read RDS secret
+- Lambda IAM role has permissions to read Mailgun secret
+- Both roles have KMS decrypt permissions for the secrets key
+- Secrets are encrypted at rest using customer-managed KMS keys
+
+---
+
+## 🔑 KMS (Key Management Service)
+
+This infrastructure uses customer-managed KMS keys (CMK) for encryption at rest across multiple services.
+
+### KMS Keys Created
+
+1. EC2 EBS Encryption Key
+2. RDS Encryption Key
+3. S3 Bucket Encryption Key
+4. Secrets Manager Encryption Key
+
+### Key Features
+
+- All keys have automatic rotation enabled (90-day period)
+- Keys use least-privilege access policies
+- Keys are region-specific and cannot be exported
+- All encrypted resources continue to work seamlessly after key rotation (via aliases)
+
+---
 
 ## 🐘 RDS (PostgreSQL)
 
@@ -168,7 +241,7 @@ RDS Configuration Overview
 - Security Group: Allows inbound traffic only from EC2’s security group on port 5432
 - Database credentials (username, DB name, port) are read from your *.tfvars files
 
-## S3 Bucket
+## 🪣 S3 Bucket
 
 An S3 bucket is created to store product images uploaded through the web application.
 
@@ -191,6 +264,25 @@ This setup implements dynamic scaling for web application instances:
 - **Scale In**: Triggered when CPU utilization falls below threshold (e.g., 3%)
 - **CloudWatch Alarms** are defined in Terraform and linked to the ASG
 - **Launch Template** ensures that every new instance boots with the correct app and configuration
+
+---
+
+## 📧 Lambda Function & SNS (Email Sending)
+
+The infrastructure includes a serverless email sending system using Lambda and SNS.
+
+### Email Flow
+
+1. User signs up via web application
+2. EC2 application publishes message to SNS topic (user-signup-topic)
+3. SNS invokes Lambda function asynchronously
+4. Lambda function
+
+---
+
+## 🗄️ DynamoDB
+
+A DynamoDB table is used for email deduplication to prevent sending duplicate verification emails.
 
 ---
 
@@ -261,16 +353,29 @@ terraform.tfstate.d/
 
 ---
 
-## Setup HTTPS Certificate with AWS Certificate Manager (ACM)
+## 💥 Setup HTTPS Certificate with AWS Certificate Manager (ACM)
 
-If you do not already have an SSL certificate, you can generate a Let's Encrypt certificate using Certbot.
-This example uses a single-domain certificate for demo.isaactai13.me:
+The ALB automatically uses HTTPS with ACM certificates. You can either:
+
+### Option 1: Auto-Detect Certificate (Recommended)
+
+If var.demo_certificate_arn is empty, Terraform will automatically detect the most recent issued certificate for your domain:
+
+```sh
+demo_certificate_arn = ""  # Leave empty for auto-detection
+domain_name          = "dev.yourdomain.com"
+```
+
+### Option 2: Import External Certificate
+
+If you do not already have an SSL certificate in ACM, you can generate a Let's Encrypt certificate using Certbot.
+This example uses a single-domain certificate for demo.yourdomain.me:
 
 ```sh
 sudo certbot certonly \
   --manual \
   --preferred-challenges dns \
-  -d demo.isaactai13.me
+  -d demo.yourdomain.me
 ```
 
 This command uses DNS TXT record validation, and Certbot does not start a web server (no need for port 80).
@@ -298,28 +403,55 @@ aws acm import-certificate \
   --tags Key=Name,Value=demo-letsencrypt Key=Environment,Value=demo
 ```
 
-Once imported, you can attach the certificate to your Application Load Balancer (ALB) HTTPS listener.
+Once imported, you can attach the certificate to your Application Load Balancer (ALB) HTTPS listener. Set the ARN in your .tfvars file:
+
+```
+demo_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/abc123..."
+```
 
 ---
 
 ## 🌐 Outputs
 
-After deployment, Terraform prints key identifiers:
+After deployment, Terraform prints key identifiers. You can view them via: terraform output
 
-- current_workspace
-- vpc_id
-- public_subnets = []
-- private_subnets = []
-- igw_id
-- route_tables
-- chosen_subnet_id
-- chosen_az
-- application_sg_id
-- instance_id
-- rds_endpoint
-- rds_port
+### Network & VPC
 
-You can also view them via: `terraform output`
+- current_workspace - Current Terraform workspace name
+- vpc_id - VPC ID
+- public_subnets - List of public subnet IDs
+- private_subnets - List of private subnet IDs
+- igw_id - Internet Gateway ID
+- route_tables - Map of public and private route table IDs
+
+### Application Access
+
+- alb_dns_name - Public DNS name of the Application Load Balancer
+- app_url - Full application URL via Route 53 (e.g., http://dev.yourdomain.com)
+- hosted_zone_id - Route 53 hosted zone ID
+
+### Load Balancing & Auto Scaling
+
+- target_group_arn - ARN of the Target Group used by the ALB
+- health_check_path - Health check path used by the Target Group
+- asg_name - Name of the Auto Scaling Group
+- asg_capacity - ASG capacity (min / desired / max)
+- launch_template_id - ID of the Launch Template used by ASG
+- launch_template_versions - Default and latest Launch Template versions
+
+### Security
+
+- application_sg_id - Application security group ID
+- security_group_ids - Map of security group IDs (alb_sg, app_sg, db_sg)
+
+### Database
+
+- rds_endpoint - RDS endpoint hostname
+- rds_port - RDS port number
+
+### Monitoring
+
+- cloudwatch_alarms - Map of CloudWatch alarm names (cpu_high, cpu_low)
 
 ---
 
@@ -328,14 +460,12 @@ You can also view them via: `terraform output`
 - Keep your CIDR blocks unique across workspaces (10.0.0.0/16, 10.1.0.0/16, etc.)
 - Add ${terraform.workspace} in resource tags to easily identify which workspace created which resource in AWS.
 - Terraform automatically stores workspace states in: `terraform.tfstate.d/<workspace>/terraform.tfstate`
+- EC2 instances are deployed in public subnets (not private) to allow direct internet access for package updates
+- All sensitive data (RDS passwords, API keys) are stored in AWS Secrets Manager, encrypted with KMS
+- All storage (EBS, RDS, S3) is encrypted at rest using customer-managed KMS keys
+- HTTP traffic is automatically redirected to HTTPS for secure communication
 
 ---
-
-當然可以 👍
-以下是完整可直接貼進你 README 的 Markdown 版本（語法正確、排版一致）👇
-
-⸻
-
 
 ## 🧪 Postman & Newman Testing
 
@@ -345,28 +475,27 @@ After the infrastructure is deployed, you can run automated API load tests using
 
 1. Make sure you have **Node.js** and **Newman** installed:
 
-```bash
-npm install -g newman
-```
+  ```bash
+  npm install -g newman
+  ```
 
 2. In your project root, create a folder named imgs and place a test image inside:
 
-```bash
-mkdir imgs
-cp ~/Desktop/image.png imgs/
-```
+  ```bash
+  mkdir imgs
+  cp ~/Desktop/image.png imgs/
+  ```
 
 3. Export your Postman collection and environment files:
 
-- NU_6255_Cloud_Automation.postman_collection.json
-- env.json (your Postman environment variables)
+   - NU_6255_Cloud_Automation.postman_collection.json
+   - env.json (your Postman environment variables)
 
-4. Confirm your upload img request in the collection references the file correctly:
+4. Confirm your upload img request in the collection references the file correctly: `"src": ["imgs/image.png"]`
 
-"src": ["imgs/image.png"]
+---
 
-
-🚀 Run Load Test with Newman
+## 🚀 Run Load Test with Newman
 
 Execute the following command in your project directory:
 
