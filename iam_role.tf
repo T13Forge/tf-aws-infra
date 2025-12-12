@@ -141,6 +141,43 @@ resource "aws_iam_role_policy" "ec2_kms_for_root_ebs" {
   })
 }
 
+# need the access to the CMK used for encryption
+resource "aws_iam_role_policy" "ec2_kms_decrypt_secret" {
+  name = "ec2-kms-decrypt-secret"
+  role = aws_iam_role.app_ec2_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Action = [
+        "kms:Decrypt",
+        "kms:DescribeKey"
+      ],
+      Resource = aws_kms_key.secrets_key.arn
+    }]
+  })
+}
+
+# ec2 need access to read secret manager
+resource "aws_iam_role_policy" "ec2_read_db_secret" {
+  name = "ec2-read-db-secret"
+  role = aws_iam_role.app_ec2_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Action = [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ],
+      Resource = aws_secretsmanager_secret.rds.arn
+    }]
+  })
+}
+
+
 # -------------------
 # Email Lambda Role
 # -------------------
